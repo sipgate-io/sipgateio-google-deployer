@@ -45,9 +45,9 @@ const startCLI = async () => {
 
   envArray.forEach((line) => {
     if (line.startsWith('#')) {
-      comment += `\n INFO: ${line
+      comment += `INFO: ${line
         .slice(line.indexOf('#') + 1, line.length)
-        .trim()}`;
+        .trim()} \n`;
       return;
     }
     const envLine = line.slice(0, line.indexOf('=')).trim();
@@ -58,14 +58,13 @@ const startCLI = async () => {
         .match(/[^'"]+/gm) ?? '';
     const question = {
       name: `env-${envLine}`,
-      message: `Bitte gebe "${envLine}" ein${comment}\n`,
+      message: `${comment} "${envLine}"=`,
       type: 'input',
       default: envDefaultParam.length > 0 ? envDefaultParam : undefined,
     };
     envQuestions.push(question);
     comment = '';
   });
-
   const envAnswers = await inquirer.prompt(envQuestions as QuestionCollection);
   console.log(envAnswers);
 };
