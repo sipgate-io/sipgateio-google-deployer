@@ -34,6 +34,7 @@ const startCLI = async () => {
   );
 
   const env = await fetchEnvExample(selectedProjectAnswers.selectedProject);
+
   const envArray = env
     .split('\n')
     .map((line) => line.trim())
@@ -50,22 +51,24 @@ const startCLI = async () => {
         .trim()} \n`;
       return;
     }
-    const envLine = line.slice(0, line.indexOf('=')).trim();
-    const envDefaultParam =
+    const envName = line.slice(0, line.indexOf('=')).trim();
+    const envDefaultValue =
       line
         .slice(line.indexOf('=') + 1, line.length)
         .trim()
         .match(/[^'"]+/gm) ?? '';
     const question = {
-      name: `env-${envLine}`,
-      message: `${comment} "${envLine}"=`,
+      prefix: `${comment}\x1B[36m\u2699\x1B[0m`,
+      name: `${envName}`,
+      message: `${envName} =`,
       type: 'input',
-      default: envDefaultParam.length > 0 ? envDefaultParam : undefined,
+      default: envDefaultValue.length > 0 ? envDefaultValue : undefined,
     };
     envQuestions.push(question);
     comment = '';
   });
   const envAnswers = await inquirer.prompt(envQuestions as QuestionCollection);
+
   console.log(envAnswers);
 };
 
