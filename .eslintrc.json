@@ -1,0 +1,28 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "extends": [
+    "airbnb-base",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
+  },
+  "rules": {
+    "no-shadow": "error",
+    "import/extensions": ["off", "ignorePackages"],
+    // "quotes": "off",
+    "indent": "off",
+    "no-console": "warn",
+    "comma-dangle": ["off", "only-multiline"],
+    "implicit-arrow-linebreak": "off",
+    "@typescript-eslint/no-inferrable-types": "off"
+  }
+}

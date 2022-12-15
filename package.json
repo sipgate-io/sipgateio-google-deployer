@@ -1,0 +1,49 @@
+{
+  "name": "sipgateio-boilerplate",
+  "version": "1.0.0",
+  "description": "A template for new sipgate.io projects containing Prettier, ESLint, Husky and TypeScript configuration files",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node .",
+    "fix:lint": "eslint src --ext .ts,.js --fix",
+    "test:lint": "eslint src --ext .ts,.js",
+    "test:format": "prettier --check .",
+    "fix:format": "prettier --write .",
+    "prepare": "husky install",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/sipgate-io/sipgateio-boilerplate.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sipgate-io/sipgateio-boilerplate/issues"
+  },
+  "homepage": "https://github.com/sipgate-io/sipgateio-boilerplate#readme",
+  "devDependencies": {
+    "@types/jest": "^28.1.4",
+    "@types/node": "^18.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.30.6",
+    "@typescript-eslint/parser": "^5.30.6",
+    "eslint": "^8.19.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "husky": "^8.0.1",
+    "jest": "^28.1.2",
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
+    "ts-jest": "^28.0.5",
+    "typescript": "^4.7.4"
+  },
+  "lint-staged": {
+    "*.{ts,js}": "eslint --fix",
+    "*.{ts,js,css,md}": "prettier --write"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "ts-node": "^10.8.2"
+  }
+}
