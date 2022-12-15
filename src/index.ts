@@ -36,20 +36,35 @@ const startCLI = async () => {
   const env = await fetchEnvExample(selectedProjectAnswers.selectedProject);
   const envArray = env
     .split('\n')
-    .filter((line) => line.length > 0)
-    .filter((line) => !line.startsWith('#'));
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  let comment = '';
 
   const envQuestions: Question[] = [];
-  envArray
-    .map((line) => line.slice(0, line.indexOf('=')).trim())
-    .forEach((line) => {
-      const question = {
-        name: `env-${line}`,
-        message: `Bitte gebe "${line}" ein`,
-        type: 'input',
-      };
-      envQuestions.push(question);
-    });
+
+  envArray.forEach((line) => {
+    if (line.startsWith('#')) {
+      comment += `\n INFO: ${line
+        .slice(line.indexOf('#') + 1, line.length)
+        .trim()}`;
+      return;
+    }
+    const envLine = line.slice(0, line.indexOf('=')).trim();
+    const envDefaultParam =
+      line
+        .slice(line.indexOf('=') + 1, line.length)
+        .trim()
+        .match(/[^'"]+/gm) ?? '';
+    const question = {
+      name: `env-${envLine}`,
+      message: `Bitte gebe "${envLine}" ein${comment}\n`,
+      type: 'input',
+      default: envDefaultParam.length > 0 ? envDefaultParam : undefined,
+    };
+    envQuestions.push(question);
+    comment = '';
+  });
 
   const envAnswers = await inquirer.prompt(envQuestions as QuestionCollection);
   console.log(envAnswers);
