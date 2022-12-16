@@ -101,7 +101,11 @@ const startCLI = async () => {
             .map(
               (p, index) =>
                 `${p.repository}${'\t'.repeat(tabs[index])}${COLOR_GRAY} - ${
-                  p.description !== 'null' ? p.description : ``
+                  p.description !== 'null'
+                    ? `${p.description.slice(0, 101)}${
+                        p.description.length > 101 ? '...' : ''
+                      }`
+                    : ``
                 }${COLOR_DEFAULT}`,
             ),
       },
