@@ -1,5 +1,14 @@
-import inquirer, { Answers, Question, QuestionCollection } from 'inquirer';
+import inquirer, { Question, QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
+
+const COLOR_GRAY = '\x1B[30m';
+const COLOR_CYAN = '\x1B[36m';
+const COLOR_DEFAULT = '\x1B[0m';
+
+type ProjectData = {
+  repository: string;
+  description: string;
+};
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
 
@@ -14,12 +23,13 @@ const parseStringToArray = (s: string) =>
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
-const getProjectList = async () =>
-  parseStringToArray(
+async function getProjectList(): Promise<ProjectData[]> {
+  return JSON.parse(
     await fetchUrl(
-      'https://raw.githubusercontent.com/sipgate-io/sipgateio-static-files/main/sipgateio-cli-projects',
+      'https://raw.githubusercontent.com/sipgate-io/sipgateio-static-files/main/sipgateio-cli-projects-lock.json',
     ),
-  ).sort();
+  );
+}
 
 const fetchEnvFor = async (project: string) =>
   parseStringToArray(
@@ -36,7 +46,7 @@ function composeQuestion(line: string, comment: string) {
       .trim()
       .match(/[^'"]+/gm) ?? '';
   return {
-    prefix: `${comment}\x1B[36m\u2699\x1B[0m`,
+    prefix: `\n${comment}${COLOR_CYAN}\u2699${COLOR_DEFAULT}`,
     name: `${envName}`,
     message: `${envName} =`,
     type: 'input',
@@ -52,9 +62,9 @@ function extractQuestions(envArray: string[]) {
   envArray.forEach((line: string) => {
     if (line.startsWith('#')) {
       // line is a comment
-      comment += `INFO: ${line
+      comment += `${COLOR_GRAY}INFO: ${line
         .slice(line.indexOf('#') + 1, line.length)
-        .trim()} \n`;
+        .trim()}${COLOR_DEFAULT}\n`;
       return;
     }
     envQuestions.push(composeQuestion(line, comment));
@@ -63,8 +73,21 @@ function extractQuestions(envArray: string[]) {
   return envQuestions;
 }
 
+function calculateTabs(strings: string[]): number[] {
+  const max = Math.max(...strings.map((s) => s.length));
+  return strings
+    .map((s) => s.length)
+    .map((l) => max - l)
+    .map((d) => Math.floor(d / 8))
+    .map((f) => f + 1);
+}
+
 const startCLI = async () => {
   const githubProjectNames = await getProjectList();
+
+  const tabs = calculateTabs(
+    githubProjectNames.map((project) => project.repository),
+  );
 
   const selectedProjectAnswers: { selectedProject: string } =
     await inquirer.prompt([
@@ -73,11 +96,21 @@ const startCLI = async () => {
         message: 'Choose an sipgate-io example:',
         type: 'autocomplete',
         source: (answersSoFor: string[], input: string | undefined) =>
-          githubProjectNames.filter((projects) =>
-            projects.includes(input ?? ''),
-          ),
+          githubProjectNames
+            .filter((project) => project.repository.includes(input ?? ''))
+            .map(
+              (p, index) =>
+                `${p.repository}${'\t'.repeat(tabs[index])}${COLOR_GRAY} - ${
+                  p.description !== 'null' ? p.description : ``
+                }${COLOR_DEFAULT}`,
+            ),
       },
     ]);
+
+  selectedProjectAnswers.selectedProject =
+    selectedProjectAnswers.selectedProject
+      .slice(0, selectedProjectAnswers.selectedProject.indexOf('\t'))
+      .trim();
 
   console.log(
     `Das Projekt: ${selectedProjectAnswers.selectedProject} wurde ausgewählt!`,
