@@ -8,6 +8,7 @@ const COLOR_DEFAULT = '\x1B[0m';
 type ProjectData = {
   repository: string;
   description: string;
+  tabOffset?: number;
 };
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
@@ -83,11 +84,16 @@ function calculateTabs(strings: string[]): number[] {
 }
 
 const startCLI = async () => {
-  const githubProjects = await getProjectList();
+  let githubProjects = await getProjectList();
 
   const tabs = calculateTabs(
     githubProjects.map((project) => project.repository),
   );
+
+  githubProjects = githubProjects.map((project, index) => ({
+    ...project,
+    tabOffset: tabs[index],
+  }));
 
   const selectedProjectAnswers: { selectedProject: string } =
     await inquirer.prompt([
@@ -99,15 +105,21 @@ const startCLI = async () => {
           githubProjects
             .filter(
               (project) =>
-                project.repository.includes(input ?? '') ||
-                project.description.includes(input ?? ''),
+                project.repository
+                  .toLowerCase()
+                  .includes(input?.toLowerCase() ?? '') ||
+                project.description
+                  .toLowerCase()
+                  .includes(input?.toLowerCase() ?? ''),
             )
             .map(
-              (p, index) =>
-                `${p.repository}${'\t'.repeat(tabs[index])}${COLOR_GRAY} - ${
-                  p.description !== 'null'
-                    ? `${p.description.slice(0, 101)}${
-                        p.description.length > 101 ? '...' : ''
+              (project) =>
+                `${project.repository}${'\t'.repeat(
+                  project.tabOffset ?? 1,
+                )}${COLOR_GRAY} - ${
+                  project.description !== 'null'
+                    ? `${project.description.slice(0, 101)}${
+                        project.description.length > 101 ? '...' : ''
                       }`
                     : ``
                 }${COLOR_DEFAULT}`,
