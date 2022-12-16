@@ -1,5 +1,9 @@
 # gc-cli-research
 
+## How to use
+
+Start sipgate-io cli with `bash ./sipgate-io.sh`.
+
 ## Requirements
 
 - gh
