@@ -1,8 +1,12 @@
 # gc-cli-research
 
+## Setup
+
+Run `chmod +x ./sipgate-io`
+
 ## How to use
 
-Start sipgate-io cli with `bash ./sipgate-io.sh`.
+Start sipgate-io cli with `./sipgate-io`.
 
 ## Requirements
 
