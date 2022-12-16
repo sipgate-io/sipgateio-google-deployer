@@ -83,10 +83,10 @@ function calculateTabs(strings: string[]): number[] {
 }
 
 const startCLI = async () => {
-  const githubProjectNames = await getProjectList();
+  const githubProjects = await getProjectList();
 
   const tabs = calculateTabs(
-    githubProjectNames.map((project) => project.repository),
+    githubProjects.map((project) => project.repository),
   );
 
   const selectedProjectAnswers: { selectedProject: string } =
@@ -96,8 +96,12 @@ const startCLI = async () => {
         message: 'Choose an sipgate-io example:',
         type: 'autocomplete',
         source: (answersSoFor: string[], input: string | undefined) =>
-          githubProjectNames
-            .filter((project) => project.repository.includes(input ?? ''))
+          githubProjects
+            .filter(
+              (project) =>
+                project.repository.includes(input ?? '') ||
+                project.description.includes(input ?? ''),
+            )
             .map(
               (p, index) =>
                 `${p.repository}${'\t'.repeat(tabs[index])}${COLOR_GRAY} - ${
