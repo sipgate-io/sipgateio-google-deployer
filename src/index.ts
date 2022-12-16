@@ -1,22 +1,32 @@
 import inquirer, { Answers, Question, QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
 
-const githubProjectNames = [
-  'sipgateio-incomingcall-node',
-  'sipgateio-incomingcall-python',
-  'sipgateio-sendsms-node',
-].sort();
-
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
 
-const fetchEnvFor = async (project: string) => {
-  const data = await fetch(
-    new URL(
+async function fetchUrl(url: string) {
+  const data = await fetch(new URL(url));
+  return data.text();
+}
+
+const parseStringToArray = (s: string) =>
+  s
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+const getProjectList = async () =>
+  parseStringToArray(
+    await fetchUrl(
+      'https://raw.githubusercontent.com/sipgate-io/sipgateio-static-files/main/sipgateio-cli-projects',
+    ),
+  ).sort();
+
+const fetchEnvFor = async (project: string) =>
+  parseStringToArray(
+    await fetchUrl(
       `https://raw.githubusercontent.com/sipgate-io/${project}/HEAD/.env.example`,
     ),
   );
-  return data.text();
-};
 
 function composeQuestion(line: string, comment: string) {
   const envName = line.slice(0, line.indexOf('=')).trim();
@@ -54,6 +64,8 @@ function extractQuestions(envArray: string[]) {
 }
 
 const startCLI = async () => {
+  const githubProjectNames = await getProjectList();
+
   const selectedProjectAnswers: { selectedProject: string } =
     await inquirer.prompt([
       {
@@ -71,12 +83,7 @@ const startCLI = async () => {
     `Das Projekt: ${selectedProjectAnswers.selectedProject} wurde ausgewählt!`,
   );
 
-  const env = await fetchEnvFor(selectedProjectAnswers.selectedProject);
-
-  const envArray = env
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+  const envArray = await fetchEnvFor(selectedProjectAnswers.selectedProject);
 
   const envQuestions: Question[] = extractQuestions(envArray);
   const envVarValues = await inquirer.prompt(
