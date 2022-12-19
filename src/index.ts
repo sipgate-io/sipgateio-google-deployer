@@ -110,6 +110,19 @@ async function gCloudAuthentification(): Promise<boolean> {
   return false;
 }
 
+async function glCloudCloneGitRepository(project: string): Promise<boolean> {
+  try {
+    await execCommand(`rm -rf ${project}`);
+    const { stdout } = await execCommand(
+      `git clone git@github.com:sipgate-io/${project}.git`,
+    );
+    return true;
+  } catch (error) {
+    console.log('Google Cloud could not clone Github Repository.');
+  }
+  return false;
+}
+
 const startCLI = async () => {
   let githubProjects = await getProjectList();
 
@@ -174,6 +187,12 @@ const startCLI = async () => {
   if (!(await gCloudAuthentification())) {
     return;
   }
+  if (
+    !(await glCloudCloneGitRepository(selectedProjectAnswers.selectedProject))
+  ) {
+    return;
+  }
+
   console.log('*** authenticated');
 };
 
