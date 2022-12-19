@@ -1,5 +1,9 @@
 import inquirer, { Question, QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execCommand = promisify(exec);
 
 const COLOR_GRAY = '\x1B[30m';
 const COLOR_CYAN = '\x1B[36m';
@@ -83,6 +87,29 @@ function calculateTabs(strings: string[]): number[] {
     .map((f) => f + 1);
 }
 
+async function gCloudAuthentification(): Promise<boolean> {
+  try {
+    const { stdout } = await execCommand(`gcloud auth login`);
+    return true;
+  } catch (error) {
+    const authenticateAgain = await inquirer.prompt([
+      {
+        name: 'googleAuthentication',
+        message:
+          'Could not authenticate with Google. Do you want to try again?',
+        type: 'confirm',
+      },
+    ]);
+    if (authenticateAgain.googleAuthentication) {
+      gCloudAuthentification();
+    } else {
+      console.log('Could not authenticate with Google. Cancelling setup.');
+      return false;
+    }
+  }
+  return false;
+}
+
 const startCLI = async () => {
   let githubProjects = await getProjectList();
 
@@ -144,6 +171,10 @@ const startCLI = async () => {
   );
 
   console.log(envVarValues);
+  if (!(await gCloudAuthentification())) {
+    return;
+  }
+  console.log('*** authenticated');
 };
 
 startCLI();

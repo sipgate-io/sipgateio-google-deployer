@@ -10,10 +10,6 @@ Start sipgate-io cli with `./sipgate-io`.
 
 ## Requirements
 
-- gh
-  - Setup MacOs `brew install gh`
-  - Setup [Linux](https://github.com/cli/cli/blob/trunk/docs/install_linux.md)
-
 ## Ablaufplan
 
 1. CLI aufsetzen und [sipgate-node](https://github.com/sipgate-io/sipgateio-node) integrieren, um Webhook URL setzen zu können
