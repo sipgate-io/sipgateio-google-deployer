@@ -110,7 +110,7 @@ async function gCloudAuthentification(): Promise<boolean> {
   return false;
 }
 
-async function glCloudCloneGitRepository(project: string): Promise<boolean> {
+async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   try {
     await execCommand(`rm -rf ${project}`);
     const { stdout } = await execCommand(
@@ -188,7 +188,7 @@ const startCLI = async () => {
     return;
   }
   if (
-    !(await glCloudCloneGitRepository(selectedProjectAnswers.selectedProject))
+    !(await gCloudCloneGitRepository(selectedProjectAnswers.selectedProject))
   ) {
     return;
   }
