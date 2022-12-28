@@ -127,9 +127,9 @@ async function gCloudAuthentification(): Promise<boolean> {
 
 async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   try {
-    await execCommand(`rm -rf ${project}`);
+    await execCommand(`rm -rf /tmp/${project}`);
     const { stdout } = await execCommand(
-      `git clone git@github.com:sipgate-io/${project}.git`,
+      `git clone git@github.com:sipgate-io/${project}.git /tmp/${project}`,
     );
     return true;
   } catch (error) {
