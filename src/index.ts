@@ -2,6 +2,7 @@ import inquirer, { Question, QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { writeFileSync } from 'fs';
 
 const execCommand = promisify(exec);
 
@@ -138,6 +139,17 @@ async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   return false;
 }
 
+function buildEnv(envVarValues: inquirer.Answers) {
+  let envFile = '';
+
+  Object.keys(envVarValues).forEach((key) => {
+    const value = envVarValues[key];
+    envFile += `${key  }=${  value  }\n`;
+  });
+
+  return envFile;
+}
+
 const startCLI = async () => {
   let githubProjects = await getProjectList();
 
@@ -207,6 +219,13 @@ const startCLI = async () => {
   ) {
     return;
   }
+
+  writeFileSync(
+    `/tmp/${selectedProjectAnswers.selectedProject}/.env`,
+    buildEnv(envVarValues),
+  );
+
+  // 3. glcoud app deploy
 
   console.log('*** authenticated');
 };
