@@ -87,7 +87,22 @@ function calculateTabs(strings: string[]): number[] {
     .map((f) => f + 1);
 }
 
+async function gCloudIsLoggedIn() {
+  try {
+    const { stdout } = await execCommand(
+      "gcloud config list --format 'value(core.account)'",
+    );
+    return stdout.length > 1;
+  } catch (error) {
+    return false;
+  }
+}
+
 async function gCloudAuthentification(): Promise<boolean> {
+  const isLoggedIn = await gCloudIsLoggedIn();
+
+  if (isLoggedIn) return true;
+
   try {
     const { stdout } = await execCommand(`gcloud auth login`);
     return true;
