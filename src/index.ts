@@ -171,6 +171,33 @@ async function selectProject() {
   await execCommand(`gcloud config set project ${res.selectedProject}`);
 }
 
+async function selectGCPRegion() {
+  const { stdout } = await execCommand(
+    `gcloud app regions list --format="value(region)"`,
+  );
+  const res = await inquirer.prompt([
+    {
+      name: 'selectedRegion',
+      message: 'Choose a region for your GCP App Engine application:',
+      type: 'autocomplete',
+      source: (answersSoFor: string[], input: string | undefined) =>
+        stdout
+          .split('\n')
+          .filter((name) =>
+            name.toLowerCase().includes(input?.toLowerCase() ?? ''),
+          ),
+    },
+  ]);
+
+  return res.selectedRegion;
+}
+
+// async function createAppEngineApplication(region: string) {
+//   const a = await execCommand(`gcloud app describe`);
+
+//   await execCommand(`gcloud app create --region=${region}`);
+// }
+
 const startCLI = async () => {
   let githubProjects = await getProjectList();
 
@@ -249,9 +276,19 @@ const startCLI = async () => {
   );
 
   await selectProject();
+  const region = await selectGCPRegion();
+
+  // await createAppEngineApplication(region);
+  try {
+    const { stderr } = await execCommand(
+      `gcloud app create --region=${region}`,
+    );
+  } catch (err) {
+    console.log('App Engine already exists.');
+  }
 
   await execCommand(
-    `cd /tmp/${selectedProjectAnswers.selectedProject} && gcloud app deploy`,
+    `cd /tmp/${selectedProjectAnswers.selectedProject} && gcloud app deploy -q`,
   );
 };
 
