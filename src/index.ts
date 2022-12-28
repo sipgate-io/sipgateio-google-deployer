@@ -144,10 +144,31 @@ function buildEnv(envVarValues: inquirer.Answers) {
 
   Object.keys(envVarValues).forEach((key) => {
     const value = envVarValues[key];
-    envFile += `${key  }=${  value  }\n`;
+    envFile += `${key}=${value}\n`;
   });
 
   return envFile;
+}
+
+async function selectProject() {
+  const { stdout } = await execCommand(
+    `gcloud projects list --format="value(projectId)"`,
+  );
+  const res = await inquirer.prompt([
+    {
+      name: 'selectedProject',
+      message: 'Choose a GCP project for this example:',
+      type: 'autocomplete',
+      source: (answersSoFor: string[], input: string | undefined) =>
+        stdout
+          .split('\n')
+          .filter((name) =>
+            name.toLowerCase().includes(input?.toLowerCase() ?? ''),
+          ),
+    },
+  ]);
+
+  await execCommand(`gcloud config set project ${res.selectedProject}`);
 }
 
 const startCLI = async () => {
@@ -214,6 +235,8 @@ const startCLI = async () => {
   if (!(await gCloudAuthentification())) {
     return;
   }
+  console.log('*** authenticated');
+
   if (
     !(await gCloudCloneGitRepository(selectedProjectAnswers.selectedProject))
   ) {
@@ -225,9 +248,11 @@ const startCLI = async () => {
     buildEnv(envVarValues),
   );
 
-  // 3. glcoud app deploy
+  await selectProject();
 
-  console.log('*** authenticated');
+  await execCommand(
+    `cd /tmp/${selectedProjectAnswers.selectedProject} && gcloud app deploy`,
+  );
 };
 
 startCLI();
