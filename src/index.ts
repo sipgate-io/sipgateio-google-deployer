@@ -10,6 +10,7 @@ const execCommand = promisify(exec);
 const COLOR_GRAY = '\x1B[30m';
 const COLOR_CYAN = '\x1B[36m';
 const COLOR_DEFAULT = '\x1B[0m';
+const DEPENDENCIES = ["git", "gcloud"];
 
 type ProjectData = {
   repository: string;
@@ -216,8 +217,37 @@ async function printURIs(selectedGCPproject: string) {
   );
 }
 
+async function isSingleDependencyPresent(name: string) {
+  try {
+    await execCommand(`which ${name}`);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+async function allDependenciesPresent() {
+  for (let i = 0; i < DEPENDENCIES.length; i += 1) {
+  const name = DEPENDENCIES[i];
+    // TODO: ein await im Loop führt zu einem ESLint Fehler
+    if (!(await isSingleDependencyPresent(name))) {
+      console.error("Found missing dependency: " + name);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
 const startCLI = async () => {
   printWelcome();
+
+  const dependencyCheckPassed = await allDependenciesPresent();
+
+  if (!dependencyCheckPassed) {
+    console.error("Missing dependency detected. Exiting.");
+    return; 
+  }
 
   console.log('Checking Google Cloud authentication...');
   if (!(await gCloudAuthentification())) {
