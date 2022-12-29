@@ -24,6 +24,15 @@ async function fetchUrl(url: string) {
   return data.text();
 }
 
+function printWelcome() {
+  console.log(
+    'This CLI tool creates a sipgate-io example project in Google Cloud, to give you the chance to try out our examples easily.',
+  );
+  console.log(
+    'It therefore requires you to have a Google account with access to the Google Cloud Platform.\n',
+  );
+}
+
 const parseStringToArray = (s: string) =>
   s
     .split('\n')
@@ -200,7 +209,7 @@ async function printURIs(selectedGCPproject: string) {
   console.log('You can access the project with these URLs:');
 
   const { stdout } = await execCommand('gcloud app browse --no-launch-browser');
-  console.log(`Webhook URI: ${  stdout.trim()}`);
+  console.log(`Webhook URI: ${stdout.trim()}`);
   console.log(
     'Google Cloud Dashboard: ' +
       `https://console.cloud.google.com/appengine?serviceId=default&project=${selectedGCPproject}`,
@@ -208,6 +217,14 @@ async function printURIs(selectedGCPproject: string) {
 }
 
 const startCLI = async () => {
+  printWelcome();
+
+  console.log('Checking Google Cloud authentication...');
+  if (!(await gCloudAuthentification())) {
+    return;
+  }
+  console.log('Authentication successful.\n');
+
   const selectedGCPproject = await selectProject();
 
   let githubProjects = await getProjectList();
@@ -268,12 +285,6 @@ const startCLI = async () => {
   const envVarValues = await inquirer.prompt(
     envQuestions as QuestionCollection,
   );
-
-  console.log('Trying to authenticate...');
-  if (!(await gCloudAuthentification())) {
-    return;
-  }
-  console.log('Authentication successful.\n');
 
   console.log('Cloning the selected project...');
 
