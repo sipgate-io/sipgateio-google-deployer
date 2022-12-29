@@ -151,6 +151,7 @@ function buildEnv(envVarValues: inquirer.Answers) {
 }
 
 async function selectProject() {
+  console.log('Fetching Google Cloud projects...');
   const { stdout } = await execCommand(
     `gcloud projects list --format="value(projectId)"`,
   );
@@ -172,6 +173,7 @@ async function selectProject() {
 }
 
 async function selectGCPRegion() {
+  console.log('Fetching Google Cloud regions...');
   const { stdout } = await execCommand(
     `gcloud app regions list --format="value(region)"`,
   );
@@ -193,6 +195,8 @@ async function selectGCPRegion() {
 }
 
 const startCLI = async () => {
+  await selectProject();
+
   let githubProjects = await getProjectList();
 
   const tabs = calculateTabs(
@@ -252,35 +256,39 @@ const startCLI = async () => {
     envQuestions as QuestionCollection,
   );
 
-  console.log(envVarValues);
+  console.log('Trying to authenticate...');
   if (!(await gCloudAuthentification())) {
     return;
   }
-  console.log('*** authenticated');
+  console.log('Authentication successful.\n');
+
+  console.log('Cloning the selected project...');
 
   if (
     !(await gCloudCloneGitRepository(selectedProjectAnswers.selectedProject))
   ) {
     return;
   }
+  console.log('Cloning complete.\n');
 
   writeFileSync(
     `/tmp/${selectedProjectAnswers.selectedProject}/.env`,
     buildEnv(envVarValues),
   );
 
-  await selectProject();
   const region = await selectGCPRegion();
 
-  // await createAppEngineApplication(region);
   try {
+    console.log('Trying to create App Engine application...');
     const { stderr } = await execCommand(
       `gcloud app create --region=${region}`,
     );
+    console.log('App Engine application created.\n');
   } catch (err) {
-    console.log('App Engine already exists.');
+    console.log('App Engine application already exists.\n');
   }
 
+  console.log('Deploying project to Google Cloud. This may take a while...');
   await execCommand(
     `cd /tmp/${selectedProjectAnswers.selectedProject} && gcloud app deploy -q`,
   );
