@@ -192,12 +192,6 @@ async function selectGCPRegion() {
   return res.selectedRegion;
 }
 
-// async function createAppEngineApplication(region: string) {
-//   const a = await execCommand(`gcloud app describe`);
-
-//   await execCommand(`gcloud app create --region=${region}`);
-// }
-
 const startCLI = async () => {
   let githubProjects = await getProjectList();
 
@@ -248,7 +242,7 @@ const startCLI = async () => {
       .trim();
 
   console.log(
-    `Das Projekt: ${selectedProjectAnswers.selectedProject} wurde ausgewählt!`,
+    `Project ${selectedProjectAnswers.selectedProject} was selected.`,
   );
 
   const envArray = await fetchEnvFor(selectedProjectAnswers.selectedProject);
