@@ -171,6 +171,7 @@ async function selectProject() {
   ]);
 
   await execCommand(`gcloud config set project ${res.selectedProject}`);
+  return res.selectedProject;
 }
 
 async function selectGCPRegion() {
@@ -195,8 +196,19 @@ async function selectGCPRegion() {
   return res.selectedRegion;
 }
 
+async function printURIs(selectedGCPproject: string) {
+  console.log('You can access the project with these URLs:');
+
+  const { stdout } = await execCommand('gcloud app browse --no-launch-browser');
+  console.log(`Webhook URI: ${  stdout.trim()}`);
+  console.log(
+    'Google Cloud Dashboard: ' +
+      `https://console.cloud.google.com/appengine?serviceId=default&project=${selectedGCPproject}`,
+  );
+}
+
 const startCLI = async () => {
-  await selectProject();
+  const selectedGCPproject = await selectProject();
 
   let githubProjects = await getProjectList();
 
@@ -293,6 +305,11 @@ const startCLI = async () => {
   await execCommand(
     `cd /tmp/${selectedProjectAnswers.selectedProject} && gcloud app deploy -q`,
   );
+  console.log(
+    `Successfully deployed ${selectedProjectAnswers.selectedProject} to ${selectedGCPproject}.\n`,
+  );
+
+  await printURIs(selectedGCPproject);
 };
 
 startCLI();
