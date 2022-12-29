@@ -1,32 +1,24 @@
 # gc-cli-research
 
-## Setup
+## Overview
 
-Run `chmod +x ./sipgate-io`
+This CLI tool creates a sipgate-io example project in Google Cloud, to give you the chance to try out our examples easily.
 
-## How to use
+## Install
 
-Start sipgate-io cli with `./sipgate-io`.
+1. Install the required dependencies (see [Requirements](#Requirements)).
+2. Clone this GitHub repository:<br>
+   `git clone git@github.com:sipgate-io/gc-cli-research.git`
+3. Jump to the directory and make the script executable:<br>
+   `cd gc-cli-research && chmod +x ./sipgate-io`
+
+## Usage
+
+1. Create a GCP project, in which you want to run these examples.
+2. Start the tool with `./sipgate-io`.
+3. Follow the instructions in the terminal.
 
 ## Requirements
 
-- install the gcloud cli
-
-## Ablaufplan
-
-1. CLI aufsetzen und [sipgate-node](https://github.com/sipgate-io/sipgateio-node) integrieren, um Webhook URL setzen zu können
-2. Über GitHub Public API [github CLI](https://cli.github.com/manual/gh) Sipgate Repo anfordern
-3. Google Cloud Projekt automatisiert erstellen über [Resource Manager API](https://cloud.google.com/nodejs/docs/reference/resource-manager/latest)
-4. Über [ADMIN-API](https://cloud.google.com/appengine/docs/admin-api/creating-an-application?hl=de#console) App Engine Projekt bereitstellen (aus Sipgate Repo)
-5. Anwendungs-Ressourcen (Repo-Files) in cloud Storage Bucket für AppEngine hochladen über [NodeJS-Storage](https://github.com/googleapis/nodejs-storage)
-6. app.yaml /app.json Konfigurationsdatei implementieren für App Engine (Benötigt cloud storage bucket url)
-7. Anwendung über die Admin API in App Engine bereitstellen und Webhook herausfiltern
-8. Webhook URL aus App Engine Projekt über sipgate-node integrieren
-
-## FAQ
-
-### Womit bauen wir das CLI-Tool?
-
-Wir benutzen [Commander](https://github.com/tj/commander.js#quick-start), weil das im Vergleich zu den Alternativen noch maintained wird.
-
-### Wie deployen wir Code von IO-Repos automatisiert in Google Cloud?
+- [`gcloud CLI`](https://cloud.google.com/sdk/gcloud)
+- `git`
