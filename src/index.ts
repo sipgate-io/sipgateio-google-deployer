@@ -1,4 +1,5 @@
 import inquirer, { Question, QuestionCollection } from 'inquirer';
+import fetch from 'node-fetch';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -19,7 +20,7 @@ type ProjectData = {
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
 
 async function fetchUrl(url: string) {
-  const data = await fetch(new URL(url));
+  const data = await fetch(url);
   return data.text();
 }
 
