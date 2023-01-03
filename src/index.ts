@@ -55,7 +55,7 @@ const fetchEnvFor = async (project: string) =>
     ),
   );
 
-function composeQuestion(line: string, comment: string) {
+export default function composeQuestion(line: string, comment: string) {
   const envName = line.slice(0, line.indexOf('=')).trim();
   const envDefaultValue =
     line
