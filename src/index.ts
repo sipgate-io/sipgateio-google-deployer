@@ -55,7 +55,7 @@ const fetchEnvFor = async (project: string) =>
     ),
   );
 
-export default function composeQuestion(line: string, comment: string) {
+export function composeQuestion(line: string, comment: string) {
   const envName = line.slice(0, line.indexOf('=')).trim();
   const envDefaultValue =
     line
@@ -71,7 +71,7 @@ export default function composeQuestion(line: string, comment: string) {
   };
 }
 
-function extractQuestions(envArray: string[]) {
+export function extractQuestions(envArray: string[]) {
   // lots of side effect, more than one responsibility
   let comment = '';
   const envQuestions: Question[] = [];
@@ -90,7 +90,7 @@ function extractQuestions(envArray: string[]) {
   return envQuestions;
 }
 
-function calculateTabs(strings: string[]): number[] {
+export function calculateTabs(strings: string[]): number[] {
   const max = Math.max(...strings.map((s) => s.length));
   return strings
     .map((s) => s.length)
@@ -150,7 +150,7 @@ async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   return false;
 }
 
-function buildEnv(envVarValues: inquirer.Answers) {
+export function buildEnv(envVarValues: inquirer.Answers) {
   let envFile = '';
 
   Object.keys(envVarValues).forEach((key) => {
