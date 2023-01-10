@@ -3,4 +3,4 @@ if [ ! -d "./node_modules" ]; then
   npm ci
 fi
 
-npm start
+npx ts-node . $@

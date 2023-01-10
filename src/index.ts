@@ -12,6 +12,31 @@ const COLOR_CYAN = '\x1B[36m';
 const COLOR_DEFAULT = '\x1B[0m';
 const DEPENDENCIES = ['git', 'gcloud'];
 
+const COMMANDS = [
+  {
+    name: 'init account',
+    description: 'Initializes sipgate.io and Google Cloud accounts',
+  },
+  {
+    name: 'examples',
+    description: 'Lists all available sipgate-io examples',
+  },
+  {
+    name: 'example/<repo-name>',
+    description:
+      'Initialize the example <repo-name> as a Google Cloud App Engine service',
+  },
+  {
+    name: 'load',
+    description:
+      'Loads the configuration from <file> and sets up the example accordingly',
+  },
+  {
+    name: 'help',
+    description: 'Display a help menu',
+  },
+];
+
 type ProjectData = {
   repository: string;
   description: string;
@@ -238,7 +263,7 @@ async function allDependenciesPresent() {
   return results.every((element) => element);
 }
 
-const startCLI = async () => {
+const runInteractiveFlow = async () => {
   printWelcome();
 
   const dependencyCheckPassed = await allDependenciesPresent();
@@ -350,5 +375,39 @@ const startCLI = async () => {
 
   await printURIs(selectedGCPproject);
 };
+
+function printHelp() {
+  console.log(
+    'This CLI tool creates a sipgate-io example project in Google Cloud, to give you the chance to try out our examples easily.\n',
+  );
+  console.log('Usage: sipgate-io <command>\n');
+  console.log(
+    `Where <command> is one of: ${ 
+      COMMANDS.map((cmd) => cmd.name).join(', ') 
+      }\n`,
+  );
+
+  const len = Math.max(...COMMANDS.map((cmd) => cmd.name.length)) + 5;
+  COMMANDS.forEach((cmd, idx) => {
+    const numSpaces = len - cmd.name.length;
+    console.log(cmd.name + ' '.repeat(numSpaces) + cmd.description);
+  });
+
+  console.log('\n');
+  console.log('Developed by sipgate.io');
+  console.log('Website:  https://www.sipgate.io');
+  console.log('Project:  https://github.com/sipgate-io/gc-cli-research');
+}
+
+function startCLI() {
+  if (process.argv.length === 3 && process.argv[2] === 'help') {
+    printHelp();
+  } else if (process.argv.length === 2) {
+    runInteractiveFlow();
+  } else {
+    console.log('Incorrect usage.');
+    console.log('Use "sipgate-io help" for more info.');
+  }
+}
 
 startCLI();
