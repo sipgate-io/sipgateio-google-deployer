@@ -2,7 +2,7 @@
   "name": "sipgateio-boilerplate",
   "version": "1.0.0",
   "description": "A template for new sipgate.io projects containing Prettier, ESLint, Husky and TypeScript configuration files",
-  "main": "src/index.ts",
+  "main": "src/main.ts",
   "scripts": {
     "start": "ts-node .",
     "fix:lint": "eslint src --ext .ts,.js --fix",

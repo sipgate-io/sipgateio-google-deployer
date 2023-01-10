@@ -238,7 +238,7 @@ async function allDependenciesPresent() {
   return results.every((element) => element);
 }
 
-const startCLI = async () => {
+export const startCLI = async () => {
   printWelcome();
 
   const dependencyCheckPassed = await allDependenciesPresent();
@@ -350,5 +350,3 @@ const startCLI = async () => {
 
   await printURIs(selectedGCPproject);
 };
-
-startCLI();
