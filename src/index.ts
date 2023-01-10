@@ -382,9 +382,9 @@ function printHelp() {
   );
   console.log('Usage: sipgate-io <command>\n');
   console.log(
-    `Where <command> is one of: ${ 
-      COMMANDS.map((cmd) => cmd.name).join(', ') 
-      }\n`,
+    `Where <command> is one of: ${COMMANDS.map((cmd) => cmd.name).join(
+      ', ',
+    )}\n`,
   );
 
   const len = Math.max(...COMMANDS.map((cmd) => cmd.name.length)) + 5;
@@ -399,7 +399,7 @@ function printHelp() {
   console.log('Project:  https://github.com/sipgate-io/gc-cli-research');
 }
 
-function startCLI() {
+export function startCLI() {
   if (process.argv.length === 3 && process.argv[2] === 'help') {
     printHelp();
   } else if (process.argv.length === 2) {
@@ -409,5 +409,3 @@ function startCLI() {
     console.log('Use "sipgate-io help" for more info.');
   }
 }
-
-startCLI();
