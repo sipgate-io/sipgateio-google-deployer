@@ -15,8 +15,9 @@ This CLI tool creates a sipgate-io example project in Google Cloud, to give you 
 ## Usage
 
 1. Create a GCP project on your [Google Cloud Dashboard](https://console.cloud.google.com/welcome), in which you want to run these examples.
-2. Start the tool with `./sipgate-io`.
-3. Follow the instructions in the terminal.
+2. Make sure the [Cloud Build API](https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com) is enabled
+3. Start the tool with `./sipgate-io`.
+4. Follow the instructions in the terminal.
 
 ## Requirements
 
