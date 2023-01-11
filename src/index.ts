@@ -11,6 +11,7 @@ const COLOR_GRAY = '\x1B[30m';
 const COLOR_CYAN = '\x1B[36m';
 const COLOR_DEFAULT = '\x1B[0m';
 const DEPENDENCIES = ['git', 'gcloud'];
+const EXECUTABLE_NAME = 'sio-gd';
 
 const COMMANDS = [
   {
@@ -19,7 +20,7 @@ const COMMANDS = [
   },
   {
     name: 'examples',
-    description: 'Lists all available sipgate-io examples',
+    description: 'Lists all available sipgate.io examples',
   },
   {
     name: 'example/<repo-name>',
@@ -52,7 +53,7 @@ async function fetchUrl(url: string) {
 
 function printWelcome() {
   console.log(
-    'This CLI tool creates a sipgate-io example project in Google Cloud, to give you the chance to try out our examples easily.',
+    'This CLI tool creates a sipgate.io example project in Google Cloud, to give you the chance to try out our examples easily.',
   );
   console.log(
     'It therefore requires you to have a Google account with access to the Google Cloud Platform.\n',
@@ -295,7 +296,7 @@ const runInteractiveFlow = async () => {
     await inquirer.prompt([
       {
         name: 'selectedProject',
-        message: 'Choose an sipgate-io example:',
+        message: 'Choose a sipgate.io example:',
         type: 'autocomplete',
         source: (answersSoFor: string[], input: string | undefined) =>
           githubProjects
@@ -378,9 +379,9 @@ const runInteractiveFlow = async () => {
 
 function printHelp() {
   console.log(
-    'This CLI tool creates a sipgate-io example project in Google Cloud, to give you the chance to try out our examples easily.\n',
+    'This CLI tool creates a sipgate.io example project in Google Cloud, to give you the chance to try out our examples easily.\n',
   );
-  console.log('Usage: sipgate-io <command>\n');
+  console.log(`Usage: ${EXECUTABLE_NAME} <command>\n`);
   console.log(
     `Where <command> is one of: ${COMMANDS.map((cmd) => cmd.name).join(
       ', ',
@@ -396,7 +397,9 @@ function printHelp() {
   console.log('\n');
   console.log('Developed by sipgate.io');
   console.log('Website:  https://www.sipgate.io');
-  console.log('Project:  https://github.com/sipgate-io/gc-cli-research');
+  console.log(
+    'Project:  https://github.com/sipgate-io/sipgateio-google-deployer',
+  );
 }
 
 export function startCLI() {
@@ -406,6 +409,6 @@ export function startCLI() {
     runInteractiveFlow();
   } else {
     console.log('Incorrect usage.');
-    console.log('Use "sipgate-io help" for more info.');
+    console.log(`Use "${EXECUTABLE_NAME} help" for more info.`);
   }
 }
