@@ -200,8 +200,10 @@ async function selectProject() {
       source: (answersSoFor: string[], input: string | undefined) =>
         stdout
           .split('\n')
-          .filter((name) =>
-            name.toLowerCase().includes(input?.toLowerCase() ?? ''),
+          .filter(
+            (name) =>
+              name.toLowerCase().includes(input?.toLowerCase() ?? '') &&
+              name !== '',
           ),
     },
   ]);
