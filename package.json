@@ -1,7 +1,7 @@
 {
-  "name": "sipgateio-boilerplate",
+  "name": "sipgateio-google-deployer",
   "version": "1.0.0",
-  "description": "A template for new sipgate.io projects containing Prettier, ESLint, Husky and TypeScript configuration files",
+  "description": "a CLI tool based on the GCloud CLI to allow for quick deployment of sipgate.io examples to the Google Cloud",
   "main": "src/main.ts",
   "scripts": {
     "start": "ts-node .",
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/sipgate-io/sipgateio-boilerplate.git"
+    "url": "git+ssh://git@github.com/sipgate-io/sipgateio-google-deployer.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sipgate-io/sipgateio-boilerplate/issues"
+    "url": "https://github.com/sipgate-io/sipgateio-google-deployer/issues"
   },
-  "homepage": "https://github.com/sipgate-io/sipgateio-boilerplate#readme",
+  "homepage": "https://github.com/sipgate-io/sipgateio-google-deployer#readme",
   "devDependencies": {
     "@types/inquirer": "^8.0.0",
     "@types/inquirer-autocomplete-prompt": "^2.0.0",
