@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 
 const execCommand = promisify(exec);
 
@@ -45,6 +45,25 @@ type ProjectData = {
 };
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
+
+const config = {};
+
+function loadConfig() {
+  const CONFIG_PATH = './config.cfg';
+
+  try {
+    const content = readFileSync(CONFIG_PATH, { encoding: 'utf-8' });
+
+    content
+      .split('\n')
+      .filter((line) => !line.startsWith('#') && line.trim() !== '')
+      .forEach((line) => {
+        console.log('cfg line:', line);
+      });
+  } catch (e) {
+    console.log('Loading config failed:', e);
+  }
+}
 
 async function fetchUrl(url: string) {
   const data = await fetch(url);
@@ -268,6 +287,8 @@ async function allDependenciesPresent() {
 
 const runInteractiveFlow = async () => {
   printWelcome();
+
+  loadConfig();
 
   const dependencyCheckPassed = await allDependenciesPresent();
   if (!dependencyCheckPassed) {
