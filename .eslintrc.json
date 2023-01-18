@@ -20,7 +20,7 @@
     "import/extensions": ["off", "ignorePackages"],
     // "quotes": "off",
     "indent": "off",
-    "no-console": "warn",
+    "no-console": "off",
     "comma-dangle": ["off", "only-multiline"],
     "implicit-arrow-linebreak": "off",
     "@typescript-eslint/no-inferrable-types": "off"
