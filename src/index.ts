@@ -227,24 +227,28 @@ async function selectProject() {
   const { stdout } = await execCommand(
     `gcloud projects list --format="value(projectId)"`,
   );
-  const res = await inquirer.prompt([
-    {
-      name: 'selectedProject',
-      message: 'Choose a GCP project for this example:',
-      type: 'autocomplete',
-      source: (answersSoFor: string[], input: string | undefined) =>
-        stdout
-          .split('\n')
-          .filter(
-            (name) =>
-              name.toLowerCase().includes(input?.toLowerCase() ?? '') &&
-              name !== '',
-          ),
-    },
-  ]);
+  let projectName = config.GOOGLE_PROJECT_NAME;
+  if (projectName === '' || projectName === undefined) {
+    const res = await inquirer.prompt([
+      {
+        name: 'selectedProject',
+        message: 'Choose a GCP project for this example:',
+        type: 'autocomplete',
+        source: (answersSoFor: string[], input: string | undefined) =>
+          stdout
+            .split('\n')
+            .filter(
+              (name) =>
+                name.toLowerCase().includes(input?.toLowerCase() ?? '') &&
+                name !== '',
+            ),
+      },
+    ]);
+    projectName = res.selectedProject;
+  }
 
-  await execCommand(`gcloud config set project ${res.selectedProject}`);
-  return res.selectedProject;
+  await execCommand(`gcloud config set project ${projectName}`);
+  return projectName;
 }
 
 async function selectGCPRegion() {
