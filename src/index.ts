@@ -256,21 +256,24 @@ async function selectGCPRegion() {
   const { stdout } = await execCommand(
     `gcloud app regions list --format="value(region)"`,
   );
-  const res = await inquirer.prompt([
-    {
-      name: 'selectedRegion',
-      message: 'Choose a region for your GCP App Engine application:',
-      type: 'autocomplete',
-      source: (answersSoFor: string[], input: string | undefined) =>
-        stdout
-          .split('\n')
-          .filter((name) =>
-            name.toLowerCase().includes(input?.toLowerCase() ?? ''),
-          ),
-    },
-  ]);
-
-  return res.selectedRegion;
+  let region = config.GOOGLE_PROJECT_REGION;
+  if (region === '' || region === undefined) {
+    const res = await inquirer.prompt([
+      {
+        name: 'selectedRegion',
+        message: 'Choose a region for your GCP App Engine application:',
+        type: 'autocomplete',
+        source: (answersSoFor: string[], input: string | undefined) =>
+          stdout
+            .split('\n')
+            .filter((name) =>
+              name.toLowerCase().includes(input?.toLowerCase() ?? ''),
+            ),
+      },
+    ]);
+    region = res.selectedRegion;
+  }
+  return region;
 }
 
 async function printURIs(selectedGCPproject: string) {
