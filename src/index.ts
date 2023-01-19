@@ -46,7 +46,24 @@ type ProjectData = {
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
 
-const config = {};
+interface Config {
+  [name: string]: string;
+}
+
+const config: Config = {};
+
+export function extractEnv(line: string) {
+  const envName = line.slice(0, line.indexOf('=')).trim();
+  const envValue = line
+    .slice(line.indexOf('=') + 1, line.length)
+    .trim()
+    .match(/[^'"]+/gm);
+
+  return {
+    envName,
+    envValue,
+  };
+}
 
 function loadConfig() {
   const CONFIG_PATH = './config.cfg';
@@ -58,8 +75,11 @@ function loadConfig() {
       .split('\n')
       .filter((line) => !line.startsWith('#') && line.trim() !== '')
       .forEach((line) => {
-        console.log('cfg line:', line);
+        const { envName, envValue } = extractEnv(line);
+        config[envName] = envValue?.[0] ?? '';
       });
+
+    console.log('cfg:', config);
   } catch (e) {
     console.log('Loading config failed:', e);
   }
@@ -101,18 +121,14 @@ const fetchEnvFor = async (project: string) =>
   );
 
 export function composeQuestion(line: string, comment: string) {
-  const envName = line.slice(0, line.indexOf('=')).trim();
-  const envDefaultValue =
-    line
-      .slice(line.indexOf('=') + 1, line.length)
-      .trim()
-      .match(/[^'"]+/gm) ?? '';
+  const { envName, envValue } = extractEnv(line);
+
   return {
     prefix: `\n${comment}${COLOR_CYAN}\u2699${COLOR_DEFAULT}`,
     name: `${envName}`,
     message: `${envName} =`,
     type: 'input',
-    default: envDefaultValue.length > 0 ? envDefaultValue : undefined,
+    default: envValue ?? undefined,
   };
 }
 
