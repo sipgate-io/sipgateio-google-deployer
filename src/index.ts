@@ -9,6 +9,7 @@ const execCommand = promisify(exec);
 
 const COLOR_GRAY = '\x1B[30m';
 const COLOR_CYAN = '\x1B[36m';
+const COLOR_YELLOW = '\x1B[33m';
 const COLOR_DEFAULT = '\x1B[0m';
 const DEPENDENCIES = ['git', 'gcloud'];
 const EXECUTABLE_NAME = 'sio-gd';
@@ -37,6 +38,10 @@ const COMMANDS = [
     description: 'Display a help menu',
   },
 ];
+
+interface BetterQuestion extends Question {
+  name: string;
+}
 
 type ProjectData = {
   repository: string;
@@ -78,13 +83,13 @@ function loadConfig() {
         const { envName, envValue } = extractEnv(line);
         config[envName] = envValue?.[0] ?? '';
       });
-
-    console.log('cfg:', config);
   } catch (e) {
     console.log('Loading config failed:', e);
   }
 }
-
+function logUsedConfig(key: string, value?: string) {
+  console.log(`Using ${key}=${value ?? '*********'} from config file.`);
+}
 async function fetchUrl(url: string) {
   const data = await fetch(url);
   return data.text();
@@ -120,7 +125,7 @@ const fetchEnvFor = async (project: string) =>
     ),
   );
 
-export function composeQuestion(line: string, comment: string) {
+export function composeQuestion(line: string, comment: string): BetterQuestion {
   const { envName, envValue } = extractEnv(line);
 
   return {
@@ -132,10 +137,10 @@ export function composeQuestion(line: string, comment: string) {
   };
 }
 
-export function extractQuestions(envArray: string[]) {
+export function extractQuestions(envArray: string[]): BetterQuestion[] {
   // lots of side effect, more than one responsibility
   let comment = '';
-  const envQuestions: Question[] = [];
+  const envQuestions: BetterQuestion[] = [];
 
   envArray.forEach((line: string) => {
     if (line.startsWith('#')) {
@@ -218,7 +223,6 @@ export function buildEnv(envVarValues: inquirer.Answers) {
     const value = envVarValues[key];
     envFile += `${key}=${value}\n`;
   });
-
   return envFile;
 }
 
@@ -228,7 +232,16 @@ async function selectProject() {
     `gcloud projects list --format="value(projectId)"`,
   );
   let projectName = config.GOOGLE_PROJECT_NAME;
-  if (projectName === '' || projectName === undefined) {
+  if (
+    projectName === '' ||
+    projectName === undefined ||
+    !stdout.includes(projectName)
+  ) {
+    if (!stdout.includes(projectName ?? '')) {
+      console.warn(
+        `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
+      );
+    }
     const res = await inquirer.prompt([
       {
         name: 'selectedProject',
@@ -245,6 +258,8 @@ async function selectProject() {
       },
     ]);
     projectName = res.selectedProject;
+  } else {
+    logUsedConfig('GOOGLE_PROJECT_NAME', projectName);
   }
 
   await execCommand(`gcloud config set project ${projectName}`);
@@ -272,6 +287,8 @@ async function selectGCPRegion() {
       },
     ]);
     region = res.selectedRegion;
+  } else {
+    logUsedConfig('GOOGLE_PROJECT_REGION', region);
   }
   return region;
 }
@@ -378,10 +395,20 @@ const runInteractiveFlow = async () => {
   console.log(
     `Project ${selectedProjectAnswers.selectedProject} was selected.`,
   );
-
+  const envConfig: Config = {};
   const envArray = await fetchEnvFor(selectedProjectAnswers.selectedProject);
+  const envQuestions: Question[] = extractQuestions(envArray).filter(
+    (question) => {
+      const key = question.name;
+      if (config[key]) {
+        envConfig[key] = config[key];
+        logUsedConfig(key, undefined);
+        return false;
+      }
+      return true;
+    },
+  );
 
-  const envQuestions: Question[] = extractQuestions(envArray);
   const envVarValues = await inquirer.prompt(
     envQuestions as QuestionCollection,
   );
@@ -397,7 +424,7 @@ const runInteractiveFlow = async () => {
 
   writeFileSync(
     `/tmp/${selectedProjectAnswers.selectedProject}/.env`,
-    buildEnv(envVarValues),
+    buildEnv({ ...envVarValues, ...envConfig }),
   );
 
   const region = await selectGCPRegion();
