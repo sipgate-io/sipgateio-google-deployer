@@ -87,6 +87,7 @@ function loadConfig() {
     console.log('Loading config failed:', e);
   }
 }
+
 function logUsedConfig(key: string, value?: string) {
   console.log(`Using ${key}=${value ?? '*********'} from config file.`);
 }
@@ -232,12 +233,9 @@ async function selectProject() {
     `gcloud projects list --format="value(projectId)"`,
   );
   let projectName = config.GOOGLE_PROJECT_NAME;
-  if (
-    projectName === '' ||
-    projectName === undefined ||
-    !stdout.includes(projectName)
-  ) {
-    if (!stdout.includes(projectName ?? '')) {
+  const isInvalidProjectName = !stdout.includes(projectName ?? '');
+  if (projectName === '' || projectName === undefined || isInvalidProjectName) {
+    if (isInvalidProjectName) {
       console.warn(
         `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
       );
@@ -272,7 +270,13 @@ async function selectGCPRegion() {
     `gcloud app regions list --format="value(region)"`,
   );
   let region = config.GOOGLE_PROJECT_REGION;
-  if (region === '' || region === undefined) {
+  const isInvalidRegion = !stdout.includes(region ?? '');
+  if (region === '' || region === undefined || isInvalidRegion) {
+    if (isInvalidRegion) {
+      console.warn(
+        `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_REGION=${region} in config.${COLOR_DEFAULT}`,
+      );
+    }
     const res = await inquirer.prompt([
       {
         name: 'selectedRegion',
@@ -397,17 +401,16 @@ const runInteractiveFlow = async () => {
   );
   const envConfig: Config = {};
   const envArray = await fetchEnvFor(selectedProjectAnswers.selectedProject);
-  const envQuestions: Question[] = extractQuestions(envArray).filter(
-    (question) => {
-      const key = question.name;
-      if (config[key]) {
-        envConfig[key] = config[key];
-        logUsedConfig(key, undefined);
-        return false;
-      }
-      return true;
-    },
-  );
+  const envQuestions: Question[] = extractQuestions(envArray);
+
+  for (let i = envQuestions.length - 1; i >= 0; i -= 1) {
+    const key = envQuestions[i].name!;
+    if (config[key]) {
+      envConfig[key] = config[key];
+      logUsedConfig(key, undefined);
+      envQuestions.splice(i, 1);
+    }
+  }
 
   const envVarValues = await inquirer.prompt(
     envQuestions as QuestionCollection,
