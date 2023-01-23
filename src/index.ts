@@ -401,10 +401,10 @@ const runInteractiveFlow = async () => {
   );
   const envConfig: Config = {};
   const envArray = await fetchEnvFor(selectedProjectAnswers.selectedProject);
-  const envQuestions: Question[] = extractQuestions(envArray);
+  const envQuestions = extractQuestions(envArray);
 
   for (let i = envQuestions.length - 1; i >= 0; i -= 1) {
-    const key = envQuestions[i].name!;
+    const key = envQuestions[i].name;
     if (config[key]) {
       envConfig[key] = config[key];
       logUsedConfig(key, undefined);
