@@ -71,7 +71,7 @@ export function extractEnv(line: string) {
   };
 }
 
-function loadConfig(configPath?: string): Config {
+export function loadConfig(configPath?: string): Config {
   const actualConfigPath = configPath ?? './config.cfg';
 
   try {

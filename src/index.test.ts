@@ -3,6 +3,7 @@ import {
   composeQuestion,
   buildEnv,
   extractQuestions,
+  loadConfig,
 } from './index';
 // composeQuestions
 test('composeQuestion', () => {
@@ -12,6 +13,16 @@ test('composeQuestion', () => {
     prefix: `\n${comment}\x1B[36m\u2699\x1B[0m`,
     name: 'test',
     default: ['funny'],
+  });
+});
+
+test('loadConfig', () => {
+  expect(loadConfig('./config.cfg.example')).toMatchObject({
+    TOKEN_ID: 'your-token-id',
+    TOKEN: 'your-token',
+    EXAMPLE_REPO_NAME: 'sipgateio-incomingcall-node',
+    GOOGLE_PROJECT_NAME: 'my-first-project',
+    GOOGLE_PROJECT_REGION: 'europe-west',
   });
 });
 
