@@ -4,6 +4,7 @@ import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFileSync, readFileSync } from 'fs';
+import * as process from 'process';
 
 const execCommand = promisify(exec);
 
@@ -55,7 +56,7 @@ interface Config {
   [name: string]: string;
 }
 
-const config: Config = {};
+let config: Config = {};
 
 export function extractEnv(line: string) {
   const envName = line.slice(0, line.indexOf('=')).trim();
@@ -70,21 +71,27 @@ export function extractEnv(line: string) {
   };
 }
 
-function loadConfig() {
-  const CONFIG_PATH = './config.cfg';
+function loadConfig(configPath?: string): Config {
+  const actualConfigPath = configPath ?? './config.cfg';
 
   try {
-    const content = readFileSync(CONFIG_PATH, { encoding: 'utf-8' });
+    const content = readFileSync(actualConfigPath, { encoding: 'utf-8' });
+    const cfgObj: Config = {};
 
     content
       .split('\n')
       .filter((line) => !line.startsWith('#') && line.trim() !== '')
       .forEach((line) => {
         const { envName, envValue } = extractEnv(line);
-        config[envName] = envValue?.[0] ?? '';
+        cfgObj[envName] = envValue?.[0] ?? '';
       });
+
+    console.log(`Loaded config from ${actualConfigPath} successfully`);
+    return cfgObj;
   } catch (e) {
     console.log('Loading config failed:', e);
+    process.exit(1);
+    return {};
   }
 }
 
@@ -332,8 +339,6 @@ async function allDependenciesPresent() {
 const runInteractiveFlow = async () => {
   printWelcome();
 
-  loadConfig();
-
   const dependencyCheckPassed = await allDependenciesPresent();
   if (!dependencyCheckPassed) {
     console.error('Missing dependency detected. Exiting.');
@@ -482,6 +487,13 @@ export function startCLI() {
   if (process.argv.length === 3 && process.argv[2] === 'help') {
     printHelp();
   } else if (process.argv.length === 2) {
+    runInteractiveFlow();
+  } else if (
+    process.argv.length > 2 &&
+    process.argv[2] === '--config' &&
+    process.argv.length < 5
+  ) {
+    config = loadConfig(process.argv[3]);
     runInteractiveFlow();
   } else {
     console.log('Incorrect usage.');
