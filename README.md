@@ -17,6 +17,8 @@ This CLI tool creates a sipgate.io example project in Google Cloud, to give you 
 1. Create a GCP project on your [Google Cloud Dashboard](https://console.cloud.google.com/welcome), in which you want to run these examples.
 2. Make sure the [Cloud Build API](https://console.cloud.google.com/apis/library/cloudbuild.googleapis.com) is enabled
 3. Start the tool with `./sio-gd`.
+   1. Use `--config` or `-c` to hand in a config file based on the given [example](./config.cfg.example).
+   2. Alternatively, you can use `--generate-config` or `-gc` to fill in the example interactively.
 4. Follow the instructions to authenticate with a Google Workspace account.
    1. Accept the required OAuth scopes and hit continue.
    2. Wait for the Authentication process to finish.

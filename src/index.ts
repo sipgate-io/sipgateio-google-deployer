@@ -218,14 +218,20 @@ function printHelp() {
 }
 
 export default async function startCLI() {
+  if (process.argv.length > 4) {
+    console.log('Incorrect usage.');
+    console.log(`Use "${EXECUTABLE_NAME} help" for more info.`);
+    return;
+  }
+
   if (process.argv.length === 3 && process.argv[2] === 'help') {
     printHelp();
-  } else if (process.argv.length === 2) {
-    runInteractiveFlow();
-  } else if (
+    return;
+  }
+
+  if (
     process.argv.length > 2 &&
-    (process.argv[2] === '--config' || process.argv[2] === '-c') &&
-    process.argv.length < 5
+    (process.argv[2] === '--config' || process.argv[2] === '-c')
   ) {
     if (configExists(process.argv[3])) {
       config = loadConfig(process.argv[3]);
@@ -239,14 +245,16 @@ export default async function startCLI() {
         },
       ]);
 
-      if (confirm) {
-        config = await interactivelyGenerateConfig();
-      }
-    }
+      if (!confirm) process.exit(0);
 
-    runInteractiveFlow();
-  } else {
-    console.log('Incorrect usage.');
-    console.log(`Use "${EXECUTABLE_NAME} help" for more info.`);
+      config = await interactivelyGenerateConfig();
+    }
+  } else if (
+    process.argv.length === 2 &&
+    (process.argv[2] === '--generate-config' || process.argv[2] === '-gc')
+  ) {
+    config = await interactivelyGenerateConfig();
   }
+
+  runInteractiveFlow();
 }
