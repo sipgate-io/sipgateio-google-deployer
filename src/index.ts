@@ -40,7 +40,7 @@ const COMMANDS = [
   },
 ];
 
-interface BetterQuestion extends Question {
+interface NamedQuestion extends Question {
   name: string;
 }
 
@@ -133,7 +133,7 @@ const fetchEnvFor = async (project: string) =>
     ),
   );
 
-export function composeQuestion(line: string, comment: string): BetterQuestion {
+export function composeQuestion(line: string, comment: string): NamedQuestion {
   const { envName, envValue } = extractEnv(line);
 
   return {
@@ -145,10 +145,10 @@ export function composeQuestion(line: string, comment: string): BetterQuestion {
   };
 }
 
-export function extractQuestions(envArray: string[]): BetterQuestion[] {
+export function extractQuestions(envArray: string[]): NamedQuestion[] {
   // lots of side effect, more than one responsibility
   let comment = '';
-  const envQuestions: BetterQuestion[] = [];
+  const envQuestions: NamedQuestion[] = [];
 
   envArray.forEach((line: string) => {
     if (line.startsWith('#')) {
