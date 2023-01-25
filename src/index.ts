@@ -30,11 +30,6 @@ const COMMANDS = [
       'Initialize the example <repo-name> as a Google Cloud App Engine service',
   },
   {
-    name: 'load',
-    description:
-      'Loads the configuration from <file> and sets up the example accordingly',
-  },
-  {
     name: 'help',
     description: 'Display a help menu',
   },
@@ -490,7 +485,7 @@ export function startCLI() {
     runInteractiveFlow();
   } else if (
     process.argv.length > 2 &&
-    process.argv[2] === '--config' &&
+    (process.argv[2] === '--config' || process.argv[2] === '-c') &&
     process.argv.length < 5
   ) {
     config = loadConfig(process.argv[3]);
