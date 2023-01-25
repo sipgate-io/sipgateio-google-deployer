@@ -1,10 +1,11 @@
+import { loadConfig } from './config';
+import { COLOR_GRAY, COLOR_DEFAULT, COLOR_CYAN } from './constants';
 import {
+  buildEnv,
   calculateTabs,
   composeQuestion,
-  buildEnv,
   extractQuestions,
-  loadConfig,
-} from './index';
+} from './utils';
 // composeQuestions
 test('composeQuestion', () => {
   const line = 'test=funny';
@@ -51,9 +52,6 @@ test('extractQuestions', () => {
     '# Use the service localhost.run or ngrok which set up a reverse ssh tunnel that forwards traffic from a public URL to your localhost\n',
     'SIPGATE_WEBHOOK_SERVER_ADDRESS=\n',
   ];
-  const COLOR_GRAY = '\x1B[30m';
-  const COLOR_CYAN = '\x1B[36m';
-  const COLOR_DEFAULT = '\x1B[0m';
   const envQuestions = [
     {
       prefix: `\n${COLOR_GRAY}INFO: The SIPGATE_TOKEN_ID and SIPGATE_TOKEN can be created here: https://app.sipgate.com/w0/personal-access-token${COLOR_DEFAULT}\n${COLOR_CYAN}⚙${COLOR_DEFAULT}`,
