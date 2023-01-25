@@ -1,11 +1,11 @@
 import { exec } from 'child_process';
 import inquirer, { QuestionCollection } from 'inquirer';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { promisify } from 'util';
 import { COLOR_YELLOW, COLOR_DEFAULT, COLOR_GRAY } from './constants';
 import { getProjectList, readExampleConfig } from './fetch';
 import { Config } from './types';
-import { calculateTabs, extractQuestions } from './utils';
+import { buildEnv, calculateTabs, extractQuestions } from './utils';
 
 const execCommand = promisify(exec);
 
@@ -56,8 +56,9 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
     envQuestions as QuestionCollection,
   );
 
-  const resultConfig: Config = {};
+  writeFileSync(`./config.cfg`, buildEnv(envVarValues));
 
+  const resultConfig: Config = {};
   Object.entries(envVarValues).forEach(([key, value]) => {
     // eslint-disable-next-line prefer-destructuring
     if (Array.isArray(value)) resultConfig[key] = value[0];
