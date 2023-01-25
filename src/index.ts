@@ -10,6 +10,7 @@ const execCommand = promisify(exec);
 
 const COLOR_GRAY = '\x1B[30m';
 const COLOR_CYAN = '\x1B[36m';
+const COLOR_GREEN = '\u001b[32m';
 const COLOR_YELLOW = '\x1B[33m';
 const COLOR_DEFAULT = '\x1B[0m';
 const DEPENDENCIES = ['git', 'gcloud'];
@@ -104,6 +105,9 @@ function printWelcome() {
   );
   console.log(
     'It therefore requires you to have a Google account with access to the Google Cloud Platform.\n',
+  );
+  console.log(
+    `For further information type${COLOR_GREEN} sio-gd help${COLOR_DEFAULT}.\n`,
   );
 }
 
