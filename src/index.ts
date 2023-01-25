@@ -1,55 +1,34 @@
-import inquirer, { Question, QuestionCollection } from 'inquirer';
-import fetch from 'node-fetch';
+import inquirer, { QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { writeFileSync } from 'fs';
+import * as process from 'process';
+
+import {
+  COLOR_DEFAULT,
+  COLOR_GREEN,
+  COMMANDS,
+  DEPENDENCIES,
+  EXECUTABLE_NAME,
+} from './constants';
+import {
+  selectProject,
+  selectSipgateIOProject,
+  selectGCPRegion,
+  configExists,
+  loadConfig,
+  interactivelyGenerateConfig,
+  logUsedConfig,
+} from './config';
+import { Config } from './types';
+import { fetchEnvFor } from './fetch';
+import { buildEnv, extractQuestions } from './utils';
 
 const execCommand = promisify(exec);
-
-const COLOR_GRAY = '\x1B[30m';
-const COLOR_CYAN = '\x1B[36m';
-const COLOR_DEFAULT = '\x1B[0m';
-const DEPENDENCIES = ['git', 'gcloud'];
-const EXECUTABLE_NAME = 'sio-gd';
-
-const COMMANDS = [
-  {
-    name: 'init account',
-    description: 'Initializes sipgate.io and Google Cloud accounts',
-  },
-  {
-    name: 'examples',
-    description: 'Lists all available sipgate.io examples',
-  },
-  {
-    name: 'example/<repo-name>',
-    description:
-      'Initialize the example <repo-name> as a Google Cloud App Engine service',
-  },
-  {
-    name: 'load',
-    description:
-      'Loads the configuration from <file> and sets up the example accordingly',
-  },
-  {
-    name: 'help',
-    description: 'Display a help menu',
-  },
-];
-
-type ProjectData = {
-  repository: string;
-  description: string;
-  tabOffset?: number;
-};
+let config: Config = {};
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
-
-async function fetchUrl(url: string) {
-  const data = await fetch(url);
-  return data.text();
-}
 
 function printWelcome() {
   console.log(
@@ -58,71 +37,9 @@ function printWelcome() {
   console.log(
     'It therefore requires you to have a Google account with access to the Google Cloud Platform.\n',
   );
-}
-
-const parseStringToArray = (s: string) =>
-  s
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-
-async function getProjectList(): Promise<ProjectData[]> {
-  return JSON.parse(
-    await fetchUrl(
-      'https://raw.githubusercontent.com/sipgate-io/sipgateio-static-files/main/sipgateio-cli-projects-lock.json',
-    ),
+  console.log(
+    `For further information type${COLOR_GREEN} sio-gd help${COLOR_DEFAULT}.\n`,
   );
-}
-
-const fetchEnvFor = async (project: string) =>
-  parseStringToArray(
-    await fetchUrl(
-      `https://raw.githubusercontent.com/sipgate-io/${project}/HEAD/.env.example`,
-    ),
-  );
-
-export function composeQuestion(line: string, comment: string) {
-  const envName = line.slice(0, line.indexOf('=')).trim();
-  const envDefaultValue =
-    line
-      .slice(line.indexOf('=') + 1, line.length)
-      .trim()
-      .match(/[^'"]+/gm) ?? '';
-  return {
-    prefix: `\n${comment}${COLOR_CYAN}\u2699${COLOR_DEFAULT}`,
-    name: `${envName}`,
-    message: `${envName} =`,
-    type: 'input',
-    default: envDefaultValue.length > 0 ? envDefaultValue : undefined,
-  };
-}
-
-export function extractQuestions(envArray: string[]) {
-  // lots of side effect, more than one responsibility
-  let comment = '';
-  const envQuestions: Question[] = [];
-
-  envArray.forEach((line: string) => {
-    if (line.startsWith('#')) {
-      // line is a comment
-      comment += `${COLOR_GRAY}INFO: ${line
-        .slice(line.indexOf('#') + 1, line.length)
-        .trim()}${COLOR_DEFAULT}\n`;
-      return;
-    }
-    envQuestions.push(composeQuestion(line, comment));
-    comment = '';
-  });
-  return envQuestions;
-}
-
-export function calculateTabs(strings: string[]): number[] {
-  const max = Math.max(...strings.map((s) => s.length));
-  return strings
-    .map((s) => s.length)
-    .map((l) => max - l)
-    .map((d) => Math.floor(d / 8))
-    .map((f) => f + 1);
 }
 
 async function gCloudIsLoggedIn() {
@@ -142,7 +59,7 @@ async function gCloudAuthentification(): Promise<boolean> {
   if (isLoggedIn) return true;
 
   try {
-    const { stdout } = await execCommand(`gcloud auth login`);
+    await execCommand(`gcloud auth login`);
     return true;
   } catch (error) {
     const authenticateAgain = await inquirer.prompt([
@@ -166,7 +83,7 @@ async function gCloudAuthentification(): Promise<boolean> {
 async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   try {
     await execCommand(`rm -rf /tmp/${project}`);
-    const { stdout } = await execCommand(
+    await execCommand(
       `git clone git@github.com:sipgate-io/${project}.git /tmp/${project}`,
     );
     return true;
@@ -174,64 +91,6 @@ async function gCloudCloneGitRepository(project: string): Promise<boolean> {
     console.log('Google Cloud could not clone Github Repository.');
   }
   return false;
-}
-
-export function buildEnv(envVarValues: inquirer.Answers) {
-  let envFile = '';
-
-  Object.keys(envVarValues).forEach((key) => {
-    const value = envVarValues[key];
-    envFile += `${key}=${value}\n`;
-  });
-
-  return envFile;
-}
-
-async function selectProject() {
-  console.log('Fetching Google Cloud projects...');
-  const { stdout } = await execCommand(
-    `gcloud projects list --format="value(projectId)"`,
-  );
-  const res = await inquirer.prompt([
-    {
-      name: 'selectedProject',
-      message: 'Choose a GCP project for this example:',
-      type: 'autocomplete',
-      source: (answersSoFor: string[], input: string | undefined) =>
-        stdout
-          .split('\n')
-          .filter(
-            (name) =>
-              name.toLowerCase().includes(input?.toLowerCase() ?? '') &&
-              name !== '',
-          ),
-    },
-  ]);
-
-  await execCommand(`gcloud config set project ${res.selectedProject}`);
-  return res.selectedProject;
-}
-
-async function selectGCPRegion() {
-  console.log('Fetching Google Cloud regions...');
-  const { stdout } = await execCommand(
-    `gcloud app regions list --format="value(region)"`,
-  );
-  const res = await inquirer.prompt([
-    {
-      name: 'selectedRegion',
-      message: 'Choose a region for your GCP App Engine application:',
-      type: 'autocomplete',
-      source: (answersSoFor: string[], input: string | undefined) =>
-        stdout
-          .split('\n')
-          .filter((name) =>
-            name.toLowerCase().includes(input?.toLowerCase() ?? ''),
-          ),
-    },
-  ]);
-
-  return res.selectedRegion;
 }
 
 async function printURIs(selectedGCPproject: string) {
@@ -266,7 +125,7 @@ async function allDependenciesPresent() {
   return results.every((element) => element);
 }
 
-const runInteractiveFlow = async () => {
+async function runInteractiveFlow() {
   printWelcome();
 
   const dependencyCheckPassed = await allDependenciesPresent();
@@ -281,103 +140,57 @@ const runInteractiveFlow = async () => {
   }
   console.log('Authentication successful.\n');
 
-  const selectedGCPproject = await selectProject();
+  const selectedGCPproject = await selectProject(config);
 
-  let githubProjects = await getProjectList();
+  const selectedIOProject = await selectSipgateIOProject(config);
 
-  const tabs = calculateTabs(
-    githubProjects.map((project) => project.repository),
-  );
+  const envConfig: Config = {};
+  const envArray = await fetchEnvFor(selectedIOProject);
+  const envQuestions = extractQuestions(envArray);
 
-  githubProjects = githubProjects.map((project, index) => ({
-    ...project,
-    tabOffset: tabs[index],
-  }));
+  for (let i = envQuestions.length - 1; i >= 0; i -= 1) {
+    const key = envQuestions[i].name;
+    if (config[key]) {
+      envConfig[key] = config[key];
+      logUsedConfig(key, undefined);
+      envQuestions.splice(i, 1);
+    }
+  }
 
-  const selectedProjectAnswers: { selectedProject: string } =
-    await inquirer.prompt([
-      {
-        name: 'selectedProject',
-        message: 'Choose a sipgate.io example:',
-        type: 'autocomplete',
-        source: (answersSoFor: string[], input: string | undefined) =>
-          githubProjects
-            .filter(
-              (project) =>
-                project.repository
-                  .toLowerCase()
-                  .includes(input?.toLowerCase() ?? '') ||
-                project.description
-                  .toLowerCase()
-                  .includes(input?.toLowerCase() ?? ''),
-            )
-            .map(
-              (project) =>
-                `${project.repository}${'\t'.repeat(
-                  project.tabOffset ?? 1,
-                )}${COLOR_GRAY} - ${
-                  project.description !== 'null'
-                    ? `${project.description.slice(0, 101)}${
-                        project.description.length > 101 ? '...' : ''
-                      }`
-                    : ``
-                }${COLOR_DEFAULT}`,
-            ),
-      },
-    ]);
-
-  selectedProjectAnswers.selectedProject =
-    selectedProjectAnswers.selectedProject
-      .slice(0, selectedProjectAnswers.selectedProject.indexOf('\t'))
-      .trim();
-
-  console.log(
-    `Project ${selectedProjectAnswers.selectedProject} was selected.`,
-  );
-
-  const envArray = await fetchEnvFor(selectedProjectAnswers.selectedProject);
-
-  const envQuestions: Question[] = extractQuestions(envArray);
   const envVarValues = await inquirer.prompt(
     envQuestions as QuestionCollection,
   );
 
   console.log('Cloning the selected project...');
 
-  if (
-    !(await gCloudCloneGitRepository(selectedProjectAnswers.selectedProject))
-  ) {
+  if (!(await gCloudCloneGitRepository(selectedIOProject))) {
     return;
   }
   console.log('Cloning complete.\n');
 
   writeFileSync(
-    `/tmp/${selectedProjectAnswers.selectedProject}/.env`,
-    buildEnv(envVarValues),
+    `/tmp/${selectedIOProject}/.env`,
+    buildEnv({ ...envVarValues, ...envConfig }),
   );
 
-  const region = await selectGCPRegion();
+  const region = await selectGCPRegion(config);
 
   try {
     console.log('Trying to create App Engine application...');
-    const { stderr } = await execCommand(
-      `gcloud app create --region=${region}`,
-    );
+    await execCommand(`gcloud app create --region=${region}`);
     console.log('App Engine application created.\n');
   } catch (err) {
     console.log('App Engine application already exists.\n');
   }
 
   console.log('Deploying project to Google Cloud. This may take a while...');
-  await execCommand(
-    `cd /tmp/${selectedProjectAnswers.selectedProject} && gcloud app deploy -q`,
-  );
+  await execCommand(`cd /tmp/${selectedIOProject} && gcloud app deploy -q`);
   console.log(
-    `Successfully deployed ${selectedProjectAnswers.selectedProject} to ${selectedGCPproject}.\n`,
+    `Successfully deployed ${selectedIOProject} to ${selectedGCPproject}.\n`,
   );
 
   await printURIs(selectedGCPproject);
-};
+}
 
 function printHelp() {
   console.log(
@@ -391,7 +204,7 @@ function printHelp() {
   );
 
   const len = Math.max(...COMMANDS.map((cmd) => cmd.name.length)) + 5;
-  COMMANDS.forEach((cmd, idx) => {
+  COMMANDS.forEach((cmd) => {
     const numSpaces = len - cmd.name.length;
     console.log(cmd.name + ' '.repeat(numSpaces) + cmd.description);
   });
@@ -404,10 +217,33 @@ function printHelp() {
   );
 }
 
-export function startCLI() {
+export default async function startCLI() {
   if (process.argv.length === 3 && process.argv[2] === 'help') {
     printHelp();
   } else if (process.argv.length === 2) {
+    runInteractiveFlow();
+  } else if (
+    process.argv.length > 2 &&
+    (process.argv[2] === '--config' || process.argv[2] === '-c') &&
+    process.argv.length < 5
+  ) {
+    if (configExists(process.argv[3])) {
+      config = loadConfig(process.argv[3]);
+    } else {
+      const { confirm } = await inquirer.prompt([
+        {
+          name: 'confirm',
+          message:
+            'Could not find an existing config. Do you want to interactively generate a new one?',
+          type: 'confirm',
+        },
+      ]);
+
+      if (confirm) {
+        config = await interactivelyGenerateConfig();
+      }
+    }
+
     runInteractiveFlow();
   } else {
     console.log('Incorrect usage.');

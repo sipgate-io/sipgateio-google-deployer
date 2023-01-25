@@ -1,3 +1,3 @@
-import { startCLI } from './index';
+import startCLI from './index';
 
 startCLI();

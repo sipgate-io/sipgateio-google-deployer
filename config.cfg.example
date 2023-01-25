@@ -1,0 +1,10 @@
+# Your sipgate credentials
+TOKEN_ID=your-token-id
+TOKEN=your-token
+
+# sipgate.io example
+EXAMPLE_REPO_NAME=sipgateio-incomingcall-node
+
+# Google cloud config
+GOOGLE_PROJECT_NAME=my-first-project
+GOOGLE_PROJECT_REGION=europe-west
