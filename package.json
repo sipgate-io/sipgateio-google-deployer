@@ -48,7 +48,7 @@
   "dependencies": {
     "inquirer": "^8.0.0",
     "inquirer-autocomplete-prompt": "^2.0.0",
-    "node-fetch": "^2.6.7",
+    "node-fetch": "^2.6.8",
     "ts-node": "^10.8.2"
   }
 }

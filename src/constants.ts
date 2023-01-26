@@ -21,6 +21,14 @@ export const COMMANDS = [
       'Initialize the example <repo-name> as a Google Cloud App Engine service',
   },
   {
+    name: '--config || -c',
+    description: 'Hands in a config file based on the given example',
+  },
+  {
+    name: '--generate-config || -gc',
+    description: 'Fill in the given example interactively',
+  },
+  {
     name: 'help',
     description: 'Display a help menu',
   },
