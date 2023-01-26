@@ -250,7 +250,7 @@ export default async function startCLI() {
       config = await interactivelyGenerateConfig();
     }
   } else if (
-    process.argv.length === 2 &&
+    process.argv.length > 2 &&
     (process.argv[2] === '--generate-config' || process.argv[2] === '-gc')
   ) {
     config = await interactivelyGenerateConfig();
