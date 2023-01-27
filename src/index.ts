@@ -6,6 +6,12 @@ import { writeFileSync } from 'fs';
 import * as process from 'process';
 
 import {
+  createSettingsModule,
+  createWebhookModule,
+  sipgateIO,
+  SipgateIOClient,
+} from 'sipgateio';
+import {
   COLOR_DEFAULT,
   COLOR_GREEN,
   COMMANDS,
@@ -39,6 +45,9 @@ function printWelcome() {
   );
   console.log(
     `For further information type${COLOR_GREEN} sio-gd help${COLOR_DEFAULT}.\n`,
+  );
+  console.log(
+    `If you use this tool repeatedly and want to save your credentials, use the flag ${COLOR_GREEN} --config${COLOR_DEFAULT}.\n`,
   );
 }
 
@@ -93,11 +102,17 @@ async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   return false;
 }
 
-async function printURIs(selectedGCPproject: string) {
-  console.log('You can access the project with these URLs:');
-
+async function extractWebhookURI(selectedGCPproject: string) {
   const { stdout } = await execCommand('gcloud app browse --no-launch-browser');
-  console.log(`Webhook URI: ${stdout.trim()}`);
+  return stdout.trim();
+}
+
+async function printWebhookUriAndGCloudUri(
+  webhookUri: string,
+  selectedGCPproject: string,
+) {
+  console.log('You can access the project with these URLs:');
+  console.log(`Webhook URI: ${webhookUri}`);
   console.log(
     'Google Cloud Dashboard: ' +
       `https://console.cloud.google.com/appengine?serviceId=default&project=${selectedGCPproject}`,
@@ -123,6 +138,77 @@ async function allDependenciesPresent() {
   const results = await Promise.all(doDependenciesExist);
 
   return results.every((element) => element);
+}
+
+function userPATExists() {
+  return config.TOKEN_ID && config.TOKEN;
+}
+
+async function askForPAT() {
+  const result = await inquirer.prompt([
+    {
+      name: 'TOKEN_ID',
+      message: 'Please enter your sipgate Token_ID: ',
+      type: 'input',
+    },
+    {
+      name: 'TOKEN',
+      message: 'Please enter your sipgate Token: ',
+      type: 'password',
+    },
+  ]);
+  return result;
+}
+
+async function setWebhookInConsoleWeb(
+  sipgateClient: SipgateIOClient,
+  webhookUri: string,
+) {
+  try {
+    const webhookSettings = createSettingsModule(sipgateClient);
+    await webhookSettings.setIncomingUrl(webhookUri);
+    await webhookSettings.setOutgoingUrl(webhookUri);
+    console.log('Successfully set webhooks in your sipgate account.\n');
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function optionallySetWebhookInConsoleWeb(webhookUri: string) {
+  let TOKEN_ID;
+  let TOKEN;
+
+  const result = await inquirer.prompt([
+    {
+      name: 'setWebhookURI',
+      message:
+        'Do you want to automatically set the webhook URI in your sipgate account?',
+      type: 'confirm',
+    },
+  ]);
+
+  if (!result.setWebhookURI) {
+    console.log(
+      'You can manually set the webhook URI here: https://console.sipgate.com/webhooks/urls',
+    );
+    return;
+  }
+
+  if (userPATExists()) {
+    TOKEN_ID = config.TOKEN_ID;
+    TOKEN = config.TOKEN;
+    logUsedConfig('TOKEN_ID', undefined);
+    logUsedConfig('TOKEN', undefined);
+  } else {
+    const enteredPAT = await askForPAT();
+    TOKEN_ID = enteredPAT.TOKEN_ID;
+    TOKEN = enteredPAT.TOKEN;
+  }
+  const sipgateClient = sipgateIO({
+    tokenId: TOKEN_ID,
+    token: TOKEN,
+  });
+  await setWebhookInConsoleWeb(sipgateClient, webhookUri);
 }
 
 async function runInteractiveFlow() {
@@ -189,7 +275,9 @@ async function runInteractiveFlow() {
     `Successfully deployed ${selectedIOProject} to ${selectedGCPproject}.\n`,
   );
 
-  await printURIs(selectedGCPproject);
+  const webhookUri = await extractWebhookURI(selectedGCPproject);
+  await printWebhookUriAndGCloudUri(selectedGCPproject, webhookUri);
+  await optionallySetWebhookInConsoleWeb('webhookUri');
 }
 
 function printHelp() {

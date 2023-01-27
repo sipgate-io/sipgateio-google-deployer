@@ -49,6 +49,7 @@
     "inquirer": "^8.0.0",
     "inquirer-autocomplete-prompt": "^2.0.0",
     "node-fetch": "^2.6.8",
+    "sipgateio": "^2.14.0",
     "ts-node": "^10.8.2"
   }
 }
