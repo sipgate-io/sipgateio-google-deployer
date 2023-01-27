@@ -74,14 +74,14 @@ export async function selectProject(config: Config) {
     `gcloud projects list --format="value(projectId)"`,
   );
   let projectName = config.GOOGLE_PROJECT_NAME;
-  const isInvalidProjectName =
-    projectName === '' ||
-    projectName === undefined ||
-    !stdout.includes(projectName ?? '');
-  if (isInvalidProjectName) {
-    console.warn(
-      `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
-    );
+  const isInvalidProjectName = !stdout.includes(projectName ?? '');
+  if (projectName === '' || projectName === undefined || isInvalidProjectName) {
+    if (isInvalidProjectName) {
+      console.warn(
+          `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
+      );
+    }
+
     const res = await inquirer.prompt([
       {
         name: 'selectedProject',
