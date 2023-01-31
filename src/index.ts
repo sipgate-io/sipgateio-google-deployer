@@ -283,7 +283,7 @@ async function runInteractiveFlow() {
 
   const webhookUri = await extractWebhookURI(selectedGCPproject);
   await printWebhookUriAndGCloudUri(selectedGCPproject, webhookUri);
-  await optionallySetWebhookInConsoleWeb('webhookUri');
+  await optionallySetWebhookInConsoleWeb(webhookUri);
 }
 
 function printHelp() {
