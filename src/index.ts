@@ -1,6 +1,6 @@
 import inquirer, { QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { writeFileSync } from 'fs';
 import * as process from 'process';
@@ -26,7 +26,7 @@ import { Config } from './types';
 import { fetchEnvFor } from './fetch';
 import { buildEnv, extractQuestions } from './utils';
 
-const execCommand = promisify(exec);
+const execCommand = promisify(execFile);
 let config: Config = {};
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
@@ -48,9 +48,12 @@ function printWelcome() {
 
 async function gCloudIsLoggedIn() {
   try {
-    const { stdout } = await execCommand(
-      "gcloud config list --format 'value(core.account)'",
-    );
+    const { stdout } = await execCommand('gcloud', [
+      'config',
+      'list',
+      '--format',
+      'value(core.account)',
+    ]);
     return stdout.length > 1;
   } catch (error) {
     return false;
@@ -63,7 +66,7 @@ async function gCloudAuthentification(): Promise<boolean> {
   if (isLoggedIn) return true;
 
   try {
-    await execCommand(`gcloud auth login`);
+    await execCommand('gcloud', ['auth', 'login']);
     return true;
   } catch (error) {
     const authenticateAgain = await inquirer.prompt([
@@ -86,10 +89,12 @@ async function gCloudAuthentification(): Promise<boolean> {
 
 async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   try {
-    await execCommand(`rm -rf /tmp/${project}`);
-    await execCommand(
-      `git clone git@github.com:sipgate-io/${project}.git /tmp/${project}`,
-    );
+    await execCommand('rm', ['-rf', `/tmp/${project}`]);
+    await execCommand('git', [
+      'clone',
+      `git@github.com:sipgate-io/${project}.git`,
+      `/tmp/${project}`,
+    ]);
     return true;
   } catch (error) {
     console.log('Google Cloud could not clone Github Repository.');
@@ -98,7 +103,11 @@ async function gCloudCloneGitRepository(project: string): Promise<boolean> {
 }
 
 async function extractWebhookURI(selectedGCPproject: string) {
-  const { stdout } = await execCommand('gcloud app browse --no-launch-browser');
+  const { stdout } = await execCommand('gcloud', [
+    'app',
+    'browse',
+    '--no-launch-browser',
+  ]);
   return stdout.trim();
 }
 
@@ -116,7 +125,7 @@ async function printWebhookUriAndGCloudUri(
 
 async function isSingleDependencyPresent(name: string) {
   try {
-    await execCommand(`which ${name}`);
+    await execCommand('which', [name]);
     return true;
   } catch (err) {
     console.error(`Found missing dependency: ${name}`);
@@ -258,14 +267,16 @@ async function runInteractiveFlow() {
 
   try {
     console.log('Trying to create App Engine application...');
-    await execCommand(`gcloud app create --region=${region}`);
+    await execCommand('gcloud', ['app', 'create', `--region=${region}`]);
     console.log('App Engine application created.\n');
   } catch (err) {
     console.log('App Engine application already exists.\n');
   }
 
   console.log('Deploying project to Google Cloud. This may take a while...');
-  await execCommand(`cd /tmp/${selectedIOProject} && gcloud app deploy -q`);
+  await execCommand('gcloud', ['app', 'deploy', '-q'], {
+    cwd: `/tmp/${selectedIOProject}`,
+  });
   console.log(
     `Successfully deployed ${selectedIOProject} to ${selectedGCPproject}.\n`,
   );
