@@ -75,10 +75,15 @@ export async function selectProject(config: Config) {
   );
   let projectName = config.GOOGLE_PROJECT_NAME;
   const isInvalidProjectName = !stdout.includes(projectName ?? '');
-  if (projectName === '' || projectName === undefined || isInvalidProjectName) {
+  if (
+    projectName === '' ||
+    projectName === undefined ||
+    isInvalidProjectName ||
+    projectName.includes('../')
+  ) {
     if (isInvalidProjectName) {
       console.warn(
-          `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
+        `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
       );
     }
 

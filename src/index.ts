@@ -5,12 +5,7 @@ import { promisify } from 'util';
 import { writeFileSync } from 'fs';
 import * as process from 'process';
 
-import {
-  createSettingsModule,
-  createWebhookModule,
-  sipgateIO,
-  SipgateIOClient,
-} from 'sipgateio';
+import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
 import {
   COLOR_DEFAULT,
   COLOR_GREEN,
@@ -47,7 +42,7 @@ function printWelcome() {
     `For further information type${COLOR_GREEN} sio-gd help${COLOR_DEFAULT}.\n`,
   );
   console.log(
-    `If you use this tool repeatedly and want to save your credentials, use the flag ${COLOR_GREEN} --config${COLOR_DEFAULT}.\n`,
+    `If you use this tool repeatedly and want to save your credentials, use the flag ${COLOR_GREEN} --config config.cfg${COLOR_DEFAULT}.\n`,
   );
 }
 
