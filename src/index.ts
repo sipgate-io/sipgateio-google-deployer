@@ -102,7 +102,7 @@ async function gCloudCloneGitRepository(project: string): Promise<boolean> {
   return false;
 }
 
-async function extractWebhookURI(selectedGCPproject: string) {
+async function extractWebhookURI() {
   const { stdout } = await execCommand('gcloud', [
     'app',
     'browse',
@@ -111,12 +111,9 @@ async function extractWebhookURI(selectedGCPproject: string) {
   return stdout.trim();
 }
 
-async function printWebhookUriAndGCloudUri(
-  webhookUri: string,
-  selectedGCPproject: string,
-) {
+async function printWebhookUriAndGCloudUri(selectedGCPproject: string) {
   console.log('You can access the project with these URLs:');
-  console.log(`Webhook URI: ${webhookUri}`);
+  console.log(`Webhook URI: ${selectedGCPproject}`);
   console.log(
     'Google Cloud Dashboard: ' +
       `https://console.cloud.google.com/appengine?serviceId=default&project=${selectedGCPproject}`,
@@ -281,8 +278,8 @@ async function runInteractiveFlow() {
     `Successfully deployed ${selectedIOProject} to ${selectedGCPproject}.\n`,
   );
 
-  const webhookUri = await extractWebhookURI(selectedGCPproject);
-  await printWebhookUriAndGCloudUri(selectedGCPproject, webhookUri);
+  const webhookUri = await extractWebhookURI();
+  await printWebhookUriAndGCloudUri(selectedGCPproject);
   await optionallySetWebhookInConsoleWeb(webhookUri);
 }
 
