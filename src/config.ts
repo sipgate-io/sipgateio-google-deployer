@@ -58,6 +58,18 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
 
   writeFileSync(`./config.cfg`, buildEnv(envVarValues));
 
+  const { confirm } = await inquirer.prompt([
+    {
+      name: 'confirm',
+      message: 'Are you sure everything is correct?',
+      type: 'confirm',
+    },
+  ]);
+
+  if (!confirm) {
+    return interactivelyGenerateConfig();
+  }
+
   const resultConfig: Config = {};
   Object.entries(envVarValues).forEach(([key, value]) => {
     // eslint-disable-next-line prefer-destructuring
