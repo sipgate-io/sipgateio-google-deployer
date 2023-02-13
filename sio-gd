@@ -1,5 +1,5 @@
 #!/bin/bash
-if ! which npx > /dev/null
+if ! command -v npx &> /dev/null
 then
   echo "node is not installed on this machine."
   echo "Please install the most recent release of node below:"
