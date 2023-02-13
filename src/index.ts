@@ -1,9 +1,10 @@
 import inquirer, { QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
-import { execFile } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 import * as process from 'process';
+import YAML from 'yaml';
 
 import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
 import {
@@ -26,8 +27,16 @@ import { Config } from './types';
 import { fetchEnvFor } from './fetch';
 import { buildEnv, extractQuestions } from './utils';
 
+interface Requirement {
+  command: string;
+  link: string;
+  group?: string;
+  exists?: boolean;
+}
+
 const execCommand = promisify(execFile);
 let config: Config = {};
+let requirements: Array<Requirement>;
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
 
@@ -308,7 +317,33 @@ function printHelp() {
   );
 }
 
+async function isRequirementInstalled(command: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    exec(`command -v ${command} 2> /dev/null`, (error) => {
+      // eslint-disable-next-line no-unused-expressions
+      error ? resolve(false) : resolve(true);
+    });
+  });
+}
+
+async function parseRequirements(file: string): Promise<Requirement[]> {
+  requirements = YAML.parse(file);
+  return Promise.all(
+    requirements.map(async (requirement) => {
+      const exists = await isRequirementInstalled(requirement.command);
+      return { ...requirement, exists };
+    }),
+  );
+}
+
 export default async function startCLI() {
+  const requirementsFile = readFileSync('./requirements.yml', 'utf-8');
+  await parseRequirements(requirementsFile).then((reqs) => {
+    requirements = reqs;
+  });
+
+  console.log(requirements);
+
   if (process.argv.length > 4) {
     console.log('Incorrect usage.');
     console.log(`Use "${EXECUTABLE_NAME} help" for more info.`);

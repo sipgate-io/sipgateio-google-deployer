@@ -1,0 +1,10 @@
+- command: gcloud
+  link: https://cloud.google.com/sdk/docs/install
+  group: cloud-service
+
+- command: aws
+  link: https://aws.aws/aws
+  group: cloud-service
+
+- command: git
+  link: https://git-scm.com/
