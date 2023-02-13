@@ -7,6 +7,22 @@ then
   exit 1
 fi
 
+if ! command -v gcloud &> /dev/null
+then
+  echo "gcloud is not installed on this machine."
+  echo "Please install the the google cloud cli here:"
+  echo "https://cloud.google.com/sdk/gcloud?hl=de"
+  exit 1
+fi
+
+if ! command -v git &> /dev/null
+then
+  echo "git is not installed on this machine."
+  echo "Please install git here:"
+  echo "https://git-scm.com/"
+  exit 1
+fi
+
 if [ ! -d "./node_modules" ]; then
   echo "Installing dependencies..."
   npm ci
