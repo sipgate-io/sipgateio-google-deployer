@@ -186,6 +186,31 @@ export async function selectSipgateIOProject(config: Config) {
   return sipgateProjectName;
 }
 
+export async function selectLocalProject() {
+  const response = await inquirer.prompt([
+    {
+      name: 'repoPath',
+      message: 'Please choose the path to your local repository: ',
+    },
+  ]);
+
+  const cleanedPath = response.repoPath.replace(/\/$/, '');
+
+  if (!existsSync(cleanedPath)) {
+    console.warn(`${COLOR_YELLOW}[WARN] Please choose an existing Path.`);
+    await selectLocalProject();
+  }
+
+  if (!existsSync(`${cleanedPath}/app.yaml`)) {
+    console.log(
+      'Invalid Repository. Please select a path which contains an app.yaml config file.',
+    );
+    await selectLocalProject();
+  }
+
+  return cleanedPath;
+}
+
 export async function selectGCPRegion(config: Config) {
   console.log('Fetching Google Cloud regions...');
   const { stdout } = await execCommand(

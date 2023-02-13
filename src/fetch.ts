@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
+import { exit } from 'process';
 import { ProjectData } from './types';
 
 async function fetchUrl(url: string) {
@@ -27,6 +28,18 @@ export async function fetchEnvFor(project: string) {
       `https://raw.githubusercontent.com/sipgate-io/${project}/HEAD/.env.example`,
     ),
   );
+}
+
+export async function fetchLocalEnvFor(path: string) {
+  const envExample = `${path}/.env.example`;
+
+  if (!existsSync(envExample)) {
+    console.log(
+      'Please create an .env.example file in your repository. If you dont have one, look inside our sipgate io example repos.',
+    );
+    exit(1);
+  }
+  return parseStringToArray(readFileSync(envExample).toString());
 }
 
 export function readExampleConfig() {
