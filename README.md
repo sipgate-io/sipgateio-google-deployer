@@ -24,7 +24,7 @@ This CLI tool creates a sipgate.io example project in Google Cloud, to give you 
    2. Wait for the Authentication process to finish.
    3. Close the Cloud SDK docs and continue within the CLI.
 5. Select a Google Cloud Project from the presented list.
-6. Select a sipgate.io example Repo from the presented list.
+6. Select a sipgate.io example Repo from the presented list or a local Repo (Keep in mind: Your Repo should contain a valid app.yaml and .env.example file).
 7. Enter a Webhook Server Port (or continue to accept the default).
 8. Select a desired Region for your App Engine application.
 9. Wait for the deployment process to finish.

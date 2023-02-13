@@ -230,12 +230,12 @@ async function runInteractiveFlow() {
   console.log('Authentication successful.\n');
 
   const locationResponse = await selectRepoLocation();
+  const selectedGCPproject = await selectProject(config);
 
   let projectPath;
   let projectName;
   let envArray;
 
-  console.log(locationResponse);
   if (locationResponse === 'local Repo') {
     projectPath = await selectLocalProject();
     projectName = projectPath;
@@ -251,8 +251,6 @@ async function runInteractiveFlow() {
     console.log('Cloning complete.\n');
     projectPath = `/tmp/${selectedIOProject}`;
   }
-
-  const selectedGCPproject = await selectProject(config);
 
   const envConfig: Config = {};
 
