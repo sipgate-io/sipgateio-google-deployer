@@ -10,8 +10,8 @@ import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
 import {
   COLOR_DEFAULT,
   COLOR_GREEN,
+  COLOR_YELLOW,
   COMMANDS,
-  DEPENDENCIES,
   EXECUTABLE_NAME,
 } from './constants';
 import {
@@ -129,25 +129,42 @@ async function printWebhookUriAndGCloudUri(selectedGCPproject: string) {
   );
 }
 
-async function isSingleDependencyPresent(name: string) {
-  try {
-    await execCommand('which', [name]);
-    return true;
-  } catch (err) {
-    console.error(`Found missing dependency: ${name}`);
-    return false;
-  }
+function getRequirementsByGroup(group: string) {
+  return requirements.filter((req) => req.group === group);
 }
 
-async function allDependenciesPresent() {
-  const doDependenciesExist = [];
-
-  for (let i = 0; i < DEPENDENCIES.length; i += 1) {
-    doDependenciesExist[i] = isSingleDependencyPresent(DEPENDENCIES[i]);
+function isCloudServicePresent() {
+  let isPresent = false;
+  const cloudServices = getRequirementsByGroup('cloud-service');
+  cloudServices.forEach((cloudReq) => {
+    if (cloudReq.exists) {
+      isPresent = true;
+    }
+  });
+  if (!isPresent) {
+    console.log(
+      `${COLOR_YELLOW}No cloud service detected. Please download one of the following:${COLOR_DEFAULT}`,
+    );
+    cloudServices.forEach((cloudReq) => {
+      console.log(`${cloudReq.command} => ${cloudReq.link}`);
+    });
   }
-  const results = await Promise.all(doDependenciesExist);
+  return isPresent;
+}
 
-  return results.every((element) => element);
+function allDependenciesPresent() {
+  let allPresent = true;
+  requirements.forEach((req) => {
+    if (!req.exists && !req.group) {
+      console.log(
+        `${COLOR_YELLOW}Missing requirement detected: ${COLOR_DEFAULT}`,
+      );
+      console.log(req.command);
+      console.log(req.link);
+      allPresent = false;
+    }
+  });
+  return allPresent && isCloudServicePresent();
 }
 
 function userPATExists() {
@@ -224,9 +241,7 @@ async function optionallySetWebhookInConsoleWeb(webhookUri: string) {
 async function runInteractiveFlow() {
   printWelcome();
 
-  const dependencyCheckPassed = await allDependenciesPresent();
-  if (!dependencyCheckPassed) {
-    console.error('Missing dependency detected. Exiting.');
+  if (!allDependenciesPresent()) {
     return;
   }
 
@@ -341,8 +356,6 @@ export default async function startCLI() {
   await parseRequirements(requirementsFile).then((reqs) => {
     requirements = reqs;
   });
-
-  console.log(requirements);
 
   if (process.argv.length > 4) {
     console.log('Incorrect usage.');
