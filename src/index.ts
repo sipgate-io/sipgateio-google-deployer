@@ -1,16 +1,15 @@
 import inquirer, { QuestionCollection } from 'inquirer';
 import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
-import { exec, execFile } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { writeFileSync, readFileSync } from 'fs';
 import * as process from 'process';
-import YAML from 'yaml';
+
 
 import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
 import {
   COLOR_DEFAULT,
   COLOR_GREEN,
-  COLOR_YELLOW,
   COMMANDS,
   EXECUTABLE_NAME,
 } from './constants';
@@ -26,17 +25,11 @@ import {
 import { Config } from './types';
 import { fetchEnvFor } from './fetch';
 import { buildEnv, extractQuestions } from './utils';
-
-interface Requirement {
-  command: string;
-  link: string;
-  group?: string;
-  exists?: boolean;
-}
+import { allDependenciesPresent, parseRequirements } from './requirements';
 
 const execCommand = promisify(execFile);
 let config: Config = {};
-let requirements: Array<Requirement>;
+
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
 
@@ -129,43 +122,9 @@ async function printWebhookUriAndGCloudUri(selectedGCPproject: string) {
   );
 }
 
-function getRequirementsByGroup(group: string) {
-  return requirements.filter((req) => req.group === group);
-}
 
-function isCloudServicePresent() {
-  let isPresent = false;
-  const cloudServices = getRequirementsByGroup('cloud-service');
-  cloudServices.forEach((cloudReq) => {
-    if (cloudReq.exists) {
-      isPresent = true;
-    }
-  });
-  if (!isPresent) {
-    console.log(
-      `${COLOR_YELLOW}No cloud service detected. Please download one of the following:${COLOR_DEFAULT}`,
-    );
-    cloudServices.forEach((cloudReq) => {
-      console.log(`${cloudReq.command} => ${cloudReq.link}`);
-    });
-  }
-  return isPresent;
-}
 
-function allDependenciesPresent() {
-  let allPresent = true;
-  requirements.forEach((req) => {
-    if (!req.exists && !req.group) {
-      console.log(
-        `${COLOR_YELLOW}Missing requirement detected: ${COLOR_DEFAULT}`,
-      );
-      console.log(req.command);
-      console.log(req.link);
-      allPresent = false;
-    }
-  });
-  return allPresent && isCloudServicePresent();
-}
+
 
 function userPATExists() {
   return config.TOKEN_ID && config.TOKEN;
@@ -332,31 +291,11 @@ function printHelp() {
   );
 }
 
-async function isRequirementInstalled(command: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    exec(`command -v ${command} 2> /dev/null`, (error) => {
-      // eslint-disable-next-line no-unused-expressions
-      error ? resolve(false) : resolve(true);
-    });
-  });
-}
 
-async function parseRequirements(file: string): Promise<Requirement[]> {
-  requirements = YAML.parse(file);
-  return Promise.all(
-    requirements.map(async (requirement) => {
-      const exists = await isRequirementInstalled(requirement.command);
-      return { ...requirement, exists };
-    }),
-  );
-}
 
 export default async function startCLI() {
   const requirementsFile = readFileSync('./requirements.yml', 'utf-8');
-  await parseRequirements(requirementsFile).then((reqs) => {
-    requirements = reqs;
-  });
-
+  await parseRequirements(requirementsFile);
   if (process.argv.length > 4) {
     console.log('Incorrect usage.');
     console.log(`Use "${EXECUTABLE_NAME} help" for more info.`);
