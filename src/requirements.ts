@@ -15,20 +15,20 @@ function getRequirementsByGroup(group: string) {
   return requirements.filter((req) => req.group === group);
 }
 
-function isCloudServicePresent() {
+function isGroupPresent(group: string): boolean {
   let isPresent = false;
-  const cloudServices = getRequirementsByGroup('cloud-service');
-  cloudServices.forEach((cloudReq) => {
-    if (cloudReq.exists) {
+  const inGroup = getRequirementsByGroup(group);
+  inGroup.forEach((req) => {
+    if (req.exists) {
       isPresent = true;
     }
   });
   if (!isPresent) {
     console.log(
-      `${COLOR_YELLOW}No cloud service detected. Please download one of the following:${COLOR_DEFAULT}`,
+      `${COLOR_YELLOW}No ${group} detected. Please download one of the following:${COLOR_DEFAULT}`,
     );
-    cloudServices.forEach((cloudReq) => {
-      console.log(`${cloudReq.command} => ${cloudReq.link}`);
+    inGroup.forEach((req) => {
+      console.log(`${req.command} => ${req.link}`);
     });
   }
   return isPresent;
@@ -46,7 +46,7 @@ export function allDependenciesPresent() {
       allPresent = false;
     }
   });
-  return allPresent && isCloudServicePresent();
+  return allPresent && isGroupPresent('cloud-service');
 }
 
 async function isRequirementInstalled(command: string): Promise<boolean> {
