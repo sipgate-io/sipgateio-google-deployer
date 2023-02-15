@@ -20,11 +20,13 @@ import {
   loadConfig,
   interactivelyGenerateConfig,
   logUsedConfig,
+  selectLocalProject,
 } from './config';
 import { Config } from './types';
-import { fetchEnvFor } from './fetch';
+import { fetchEnvFor, fetchLocalEnvFor } from './fetch';
 import { buildEnv, extractQuestions } from './utils';
 import { allDependenciesPresent, parseRequirements } from './requirements';
+import selectRepoLocation from './prompts';
 
 const execCommand = promisify(execFile);
 let config: Config = {};
@@ -204,12 +206,31 @@ async function runInteractiveFlow() {
   }
   console.log('Authentication successful.\n');
 
+  const locationResponse = await selectRepoLocation();
   const selectedGCPproject = await selectProject(config);
 
-  const selectedIOProject = await selectSipgateIOProject(config);
+  let projectPath;
+  let projectName;
+  let envArray;
+
+  if (locationResponse === 'local Repo') {
+    projectPath = await selectLocalProject();
+    projectName = projectPath;
+    envArray = await fetchLocalEnvFor(projectPath);
+  } else {
+    const selectedIOProject = await selectSipgateIOProject(config);
+    envArray = await fetchEnvFor(selectedIOProject);
+    console.log('Cloning the selected project...');
+
+    if (!(await gCloudCloneGitRepository(selectedIOProject))) {
+      return;
+    }
+    console.log('Cloning complete.\n');
+    projectPath = `/tmp/${selectedIOProject}`;
+  }
 
   const envConfig: Config = {};
-  const envArray = await fetchEnvFor(selectedIOProject);
+
   const envQuestions = extractQuestions(envArray);
 
   for (let i = envQuestions.length - 1; i >= 0; i -= 1) {
@@ -225,15 +246,8 @@ async function runInteractiveFlow() {
     envQuestions as QuestionCollection,
   );
 
-  console.log('Cloning the selected project...');
-
-  if (!(await gCloudCloneGitRepository(selectedIOProject))) {
-    return;
-  }
-  console.log('Cloning complete.\n');
-
   writeFileSync(
-    `/tmp/${selectedIOProject}/.env`,
+    `${projectPath}/.env`,
     buildEnv({ ...envVarValues, ...envConfig }),
   );
 
@@ -249,10 +263,10 @@ async function runInteractiveFlow() {
 
   console.log('Deploying project to Google Cloud. This may take a while...');
   await execCommand('gcloud', ['app', 'deploy', '-q'], {
-    cwd: `/tmp/${selectedIOProject}`,
+    cwd: `${projectPath}`,
   });
   console.log(
-    `Successfully deployed ${selectedIOProject} to ${selectedGCPproject}.\n`,
+    `Successfully deployed ${projectName} to ${selectedGCPproject}.\n`,
   );
 
   const webhookUri = await extractWebhookURI();
