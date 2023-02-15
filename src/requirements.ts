@@ -34,7 +34,7 @@ function isGroupPresent(group: string): boolean {
   return isPresent;
 }
 
-export function allDependenciesPresent() {
+export function allRequirementsPresent() {
   let allPresent = true;
   requirements.forEach((req) => {
     if (!req.exists && !req.group) {

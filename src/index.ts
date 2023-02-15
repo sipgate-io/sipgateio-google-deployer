@@ -25,7 +25,7 @@ import {
 import { Config } from './types';
 import { fetchEnvFor, fetchLocalEnvFor } from './fetch';
 import { buildEnv, extractQuestions } from './utils';
-import { allDependenciesPresent, parseRequirements } from './requirements';
+import { allRequirementsPresent, parseRequirements } from './requirements';
 import selectRepoLocation from './prompts';
 
 const execCommand = promisify(execFile);
@@ -196,7 +196,7 @@ async function optionallySetWebhookInConsoleWeb(webhookUri: string) {
 async function runInteractiveFlow() {
   printWelcome();
 
-  if (!allDependenciesPresent()) {
+  if (!allRequirementsPresent()) {
     return;
   }
 
