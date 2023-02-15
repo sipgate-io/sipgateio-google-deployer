@@ -5,7 +5,6 @@ import { promisify } from 'util';
 import { writeFileSync, readFileSync } from 'fs';
 import * as process from 'process';
 
-
 import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
 import {
   COLOR_DEFAULT,
@@ -29,7 +28,6 @@ import { allDependenciesPresent, parseRequirements } from './requirements';
 
 const execCommand = promisify(execFile);
 let config: Config = {};
-
 
 inquirer.registerPrompt('autocomplete', inquirerAutocompletePrompt);
 
@@ -121,10 +119,6 @@ async function printWebhookUriAndGCloudUri(selectedGCPproject: string) {
       `https://console.cloud.google.com/appengine?serviceId=default&project=${selectedGCPproject}`,
   );
 }
-
-
-
-
 
 function userPATExists() {
   return config.TOKEN_ID && config.TOKEN;
@@ -291,11 +285,10 @@ function printHelp() {
   );
 }
 
-
-
 export default async function startCLI() {
   const requirementsFile = readFileSync('./requirements.yml', 'utf-8');
   await parseRequirements(requirementsFile);
+
   if (process.argv.length > 4) {
     console.log('Incorrect usage.');
     console.log(`Use "${EXECUTABLE_NAME} help" for more info.`);
