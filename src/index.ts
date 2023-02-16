@@ -6,9 +6,11 @@ import { writeFileSync, readFileSync } from 'fs';
 import * as process from 'process';
 
 import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
+import { Command, Option } from 'commander';
 import {
   COLOR_DEFAULT,
   COLOR_GREEN,
+  COLOR_YELLOW,
   COMMANDS,
   EXECUTABLE_NAME,
 } from './constants';
@@ -303,43 +305,39 @@ export default async function startCLI() {
   const requirementsFile = readFileSync('./requirements.yml', 'utf-8');
   await parseRequirements(requirementsFile);
 
-  if (process.argv.length > 4) {
-    console.log('Incorrect usage.');
-    console.log(`Use "${EXECUTABLE_NAME} help" for more info.`);
-    return;
-  }
+  // run without specifying a command
+  const program = new Command().name(EXECUTABLE_NAME);
 
-  if (process.argv.length === 3 && process.argv[2] === 'help') {
-    printHelp();
-    return;
-  }
+  program
+    .command('run', { isDefault: true })
+    .option(
+      '-c, --config [path]',
+      'Hands in a config file based on the given example',
+    )
+    .option(
+      '-gc, --generate-config',
+      'Fill in the given example interactively and generate config.cfg',
+    )
+    .action(async (options) => {
+      if (options.generateConfig) {
+        config = await interactivelyGenerateConfig();
+      } else if (typeof options.config === 'string') {
+        config = loadConfig(options.config);
+      } else if (options.config) {
+        const { confirm } = await inquirer.prompt([
+          {
+            name: 'confirm',
+            message:
+              'Could not find an existing config. Do you want to interactively generate a new one?',
+            type: 'confirm',
+          },
+        ]);
+        if (!confirm) process.exit(0);
+        config = await interactivelyGenerateConfig();
+      }
+      console.log(config);
+      runInteractiveFlow();
+    });
 
-  if (
-    process.argv.length > 2 &&
-    (process.argv[2] === '--config' || process.argv[2] === '-c')
-  ) {
-    if (configExists(process.argv[3])) {
-      config = loadConfig(process.argv[3]);
-    } else {
-      const { confirm } = await inquirer.prompt([
-        {
-          name: 'confirm',
-          message:
-            'Could not find an existing config. Do you want to interactively generate a new one?',
-          type: 'confirm',
-        },
-      ]);
-
-      if (!confirm) process.exit(0);
-
-      config = await interactivelyGenerateConfig();
-    }
-  } else if (
-    process.argv.length > 2 &&
-    (process.argv[2] === '--generate-config' || process.argv[2] === '-gc')
-  ) {
-    config = await interactivelyGenerateConfig();
-  }
-
-  runInteractiveFlow();
+  program.parseAsync();
 }
