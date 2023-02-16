@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/sipgate-io/sipgateio-google-deployer#readme",
   "devDependencies": {
+    "@types/commander": "^2.12.2",
     "@types/inquirer": "^8.0.0",
     "@types/inquirer-autocomplete-prompt": "^2.0.0",
     "@types/jest": "^29.2.4",
@@ -46,6 +47,7 @@
     "*.{ts,js,css,md}": "prettier --write"
   },
   "dependencies": {
+    "commander": "^10.0.0",
     "inquirer": "^8.0.0",
     "inquirer-autocomplete-prompt": "^2.0.0",
     "node-fetch": "^2.6.8",
