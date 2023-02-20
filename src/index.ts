@@ -3,24 +3,13 @@ import inquirerAutocompletePrompt from 'inquirer-autocomplete-prompt';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { writeFileSync, readFileSync } from 'fs';
-import * as process from 'process';
 
 import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
-import { Command, Option } from 'commander';
-import {
-  COLOR_DEFAULT,
-  COLOR_GREEN,
-  COLOR_YELLOW,
-  COMMANDS,
-  EXECUTABLE_NAME,
-} from './constants';
+import { COLOR_DEFAULT, COLOR_GREEN } from './constants';
 import {
   selectProject,
   selectSipgateIOProject,
   selectGCPRegion,
-  configExists,
-  loadConfig,
-  interactivelyGenerateConfig,
   logUsedConfig,
   selectLocalProject,
 } from './config';
@@ -29,6 +18,7 @@ import { fetchEnvFor, fetchLocalEnvFor } from './fetch';
 import { buildEnv, extractQuestions } from './utils';
 import { allRequirementsPresent, parseRequirements } from './requirements';
 import selectRepoLocation from './prompts';
+import { cmdConfig, registerCommands } from './commands';
 
 const execCommand = promisify(execFile);
 let config: Config = {};
@@ -276,97 +266,12 @@ async function runInteractiveFlow() {
   await optionallySetWebhookInConsoleWeb(webhookUri);
 }
 
-function printHelp() {
-  console.log(
-    'This CLI tool creates a sipgate.io example project in Google Cloud, to give you the chance to try out our examples easily.\n',
-  );
-  console.log(`Usage: ${EXECUTABLE_NAME} <command>\n`);
-  console.log(
-    `Where <command> is one of: ${COMMANDS.map((cmd) => cmd.name).join(
-      ', ',
-    )}\n`,
-  );
-
-  const len = Math.max(...COMMANDS.map((cmd) => cmd.name.length)) + 5;
-  COMMANDS.forEach((cmd) => {
-    const numSpaces = len - cmd.name.length;
-    console.log(cmd.name + ' '.repeat(numSpaces) + cmd.description);
-  });
-
-  console.log('\n');
-  console.log('Developed by sipgate.io');
-  console.log('Website:  https://www.sipgate.io');
-  console.log(
-    'Project:  https://github.com/sipgate-io/sipgateio-google-deployer',
-  );
-}
-
 export default async function startCLI() {
   const requirementsFile = readFileSync('./requirements.yml', 'utf-8');
   await parseRequirements(requirementsFile);
 
-  // run without specifying a command
-  const program = new Command().name(EXECUTABLE_NAME);
+  await registerCommands();
+  config = cmdConfig;
 
-  program
-    .command('run', { isDefault: true })
-    .description('start the interactive flow')
-    .option(
-      '-c, --config [path]',
-      'Hands in a config file based on the given example',
-    )
-    .option(
-      '-gc, --generate-config',
-      'Fill in the given example interactively and generate config.cfg',
-    )
-    .action(async (options) => {
-      if (options.generateConfig) {
-        config = await interactivelyGenerateConfig();
-      } else if (typeof options.config === 'string') {
-        config = loadConfig(options.config);
-      } else if (options.config) {
-        const { confirm } = await inquirer.prompt([
-          {
-            name: 'confirm',
-            message:
-              'Could not find an existing config. Do you want to interactively generate a new one?',
-            type: 'confirm',
-          },
-        ]);
-        if (!confirm) process.exit(0);
-        config = await interactivelyGenerateConfig();
-      }
-      runInteractiveFlow();
-    });
-
-  program
-    .command('example <repository>')
-    .description(
-      'initialize the example <repository> as a Google Cloud App Engine service',
-    )
-    .action((repository) => {
-      console.warn(
-        `${COLOR_YELLOW}[WARN]: This feature is not implemented yet!${COLOR_DEFAULT}\n./sio-gd example ${repository}`,
-      );
-    });
-
-  program
-    .command('examples')
-    .description('lists all available sipgate.io examples')
-    .action(() => {
-      console.warn(
-        `${COLOR_YELLOW}[WARN]: This feature is not implemented yet!${COLOR_DEFAULT}\n./sio-gd examples`,
-      );
-    });
-
-  program
-    .command('init-account')
-    .description('initializes sipgate.io and Google Cloud accounts')
-    .action(() => {
-      console.warn(
-        `${COLOR_YELLOW}[WARN]: This feature is not implemented yet!${COLOR_DEFAULT}\n./sio-gd init account`,
-      );
-    });
-
-  program.parseAsync();
+  runInteractiveFlow();
 }
