@@ -32,5 +32,6 @@ This CLI tool creates a sipgate.io example project in Google Cloud, to give you 
 
 ## Requirements
 
-- [`gcloud CLI`](https://cloud.google.com/sdk/gcloud)
-- `git`
+- [`node`](https://nodejs.org/en/)
+- [`gcloud CLI`](https://cloud.google.com/sdk/docs/install)
+- [`git`](https://git-scm.com/)
