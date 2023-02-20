@@ -4,32 +4,3 @@ export const COLOR_GREEN = '\u001b[32m';
 export const COLOR_YELLOW = '\x1B[33m';
 export const COLOR_DEFAULT = '\x1B[0m';
 export const EXECUTABLE_NAME = 'sio-gd';
-
-export const COMMANDS = [
-  {
-    name: 'init account',
-    description: 'Initializes sipgate.io and Google Cloud accounts',
-  },
-  {
-    name: 'examples',
-    description: 'Lists all available sipgate.io examples',
-  },
-  {
-    name: 'example/<repo-name>',
-    description:
-      'Initialize the example <repo-name> as a Google Cloud App Engine service',
-  },
-  {
-    name: '--generate-config || -gc',
-    description:
-      'Fill in the given example interactively and generate config.cfg',
-  },
-  {
-    name: '--config config.cfg || -c config.cfg',
-    description: 'Hands in a config file based on the given example',
-  },
-  {
-    name: 'help',
-    description: 'Display a help menu',
-  },
-];
