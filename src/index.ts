@@ -310,6 +310,7 @@ export default async function startCLI() {
 
   program
     .command('run', { isDefault: true })
+    .description('start the interactive flow')
     .option(
       '-c, --config [path]',
       'Hands in a config file based on the given example',
@@ -335,8 +336,36 @@ export default async function startCLI() {
         if (!confirm) process.exit(0);
         config = await interactivelyGenerateConfig();
       }
-      console.log(config);
       runInteractiveFlow();
+    });
+
+  program
+    .command('example <repository>')
+    .description(
+      'initialize the example <repository> as a Google Cloud App Engine service',
+    )
+    .action((repository) => {
+      console.warn(
+        `${COLOR_YELLOW}[WARN]: This feature is not implemented yet!${COLOR_DEFAULT}\n./sio-gd example ${repository}`,
+      );
+    });
+
+  program
+    .command('examples')
+    .description('lists all available sipgate.io examples')
+    .action(() => {
+      console.warn(
+        `${COLOR_YELLOW}[WARN]: This feature is not implemented yet!${COLOR_DEFAULT}\n./sio-gd examples`,
+      );
+    });
+
+  program
+    .command('init-account')
+    .description('initializes sipgate.io and Google Cloud accounts')
+    .action(() => {
+      console.warn(
+        `${COLOR_YELLOW}[WARN]: This feature is not implemented yet!${COLOR_DEFAULT}\n./sio-gd init account`,
+      );
     });
 
   program.parseAsync();
