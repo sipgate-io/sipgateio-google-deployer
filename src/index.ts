@@ -7,7 +7,7 @@ import { writeFileSync, readFileSync } from 'fs';
 import { createSettingsModule, sipgateIO, SipgateIOClient } from 'sipgateio';
 import { COLOR_DEFAULT, COLOR_GREEN } from './constants';
 import {
-  selectProject,
+  selectGoogleCloudProject,
   selectSipgateIOProject,
   selectGCPRegion,
   logUsedConfig,
@@ -199,7 +199,7 @@ async function runInteractiveFlow() {
   console.log('Authentication successful.\n');
 
   const locationResponse = await selectRepoLocation();
-  const selectedGCPproject = await selectProject(config);
+  const selectedGCPproject = await selectGoogleCloudProject(config);
 
   let projectPath;
   let projectName;

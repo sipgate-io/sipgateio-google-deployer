@@ -105,110 +105,110 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
   return resultConfig;
 }
 
-export async function selectProject(config: Config) {
+export async function selectGoogleCloudProject(config: Config) {
   console.log('Fetching Google Cloud projects...');
   const { stdout } = await execCommand(
     `gcloud projects list --format="value(projectId)"`,
   );
-  let projectName = config.GOOGLE_PROJECT_NAME;
-  const isInvalidProjectName = !stdout.includes(projectName ?? '');
-  if (
-    projectName === '' ||
-    projectName === undefined ||
-    isInvalidProjectName ||
-    projectName.includes('../')
-  ) {
-    if (isInvalidProjectName) {
-      console.warn(
-        `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
-      );
-    }
+  const projectName = config.GOOGLE_PROJECT_NAME;
+  const isValidProjectName =
+    stdout.includes(projectName ?? '') && !projectName?.includes('../');
 
-    const res = await inquirer.prompt([
-      {
-        name: 'selectedProject',
-        message: 'Choose a GCP project for this example:',
-        type: 'autocomplete',
-        source: (answersSoFor: string[], input: string | undefined) =>
-          stdout
-            .split('\n')
-            .filter(
-              (name) =>
-                name.toLowerCase().includes(input?.toLowerCase() ?? '') &&
-                name !== '',
-            ),
-      },
-    ]);
-    projectName = res.selectedProject;
-  } else {
+  const gcloudSetProject = async (name: string) => {
+    await execCommand(`gcloud config set project ${name}`);
+    return name;
+  };
+
+  if (projectName && isValidProjectName) {
     logUsedConfig('GOOGLE_PROJECT_NAME', projectName);
+
+    return gcloudSetProject(projectName);
   }
 
-  await execCommand(`gcloud config set project ${projectName}`);
-  return projectName;
+  if (!isValidProjectName) {
+    console.warn(
+      `${COLOR_YELLOW}[WARN] Invalid GOOGLE_PROJECT_NAME=${projectName} in config.${COLOR_DEFAULT}`,
+    );
+  }
+
+  const { selectedProject } = await inquirer.prompt([
+    {
+      name: 'selectedProject',
+      message: 'Choose a GCP project for this example:',
+      type: 'autocomplete',
+      source: (answersSoFor: string[], input: string | undefined) =>
+        stdout
+          .split('\n')
+          .filter(
+            (name) =>
+              name.toLowerCase().includes(input?.toLowerCase() ?? '') &&
+              name !== '',
+          ),
+    },
+  ]);
+
+  return gcloudSetProject(selectedProject);
 }
 
 export async function selectSipgateIOProject(config: Config) {
   let githubProjects = await getProjectList();
 
-  let sipgateProjectName = config.EXAMPLE_REPO_NAME;
-  const isInvalidProjectName =
-    sipgateProjectName === '' ||
-    sipgateProjectName === undefined ||
-    !githubProjects.find((x) => x.repository === sipgateProjectName);
-  if (isInvalidProjectName) {
-    console.warn(
-      `${COLOR_YELLOW}[WARN] Invalid EXAMPLE_REPO_NAME=${sipgateProjectName} in config.${COLOR_DEFAULT}`,
-    );
+  const projectName = config.EXAMPLE_REPO_NAME;
+  const isValidProjectName =
+    !projectName || githubProjects.find((x) => x.repository === projectName);
 
-    const tabs = calculateTabs(
-      githubProjects.map((project) => project.repository),
-    );
-
-    githubProjects = githubProjects.map((project, index) => ({
-      ...project,
-      tabOffset: tabs[index],
-    }));
-
-    const { selectedProject } = await inquirer.prompt([
-      {
-        name: 'selectedProject',
-        message: 'Choose a sipgate.io example:',
-        type: 'autocomplete',
-        source: (answersSoFor: string[], input: string | undefined) =>
-          githubProjects
-            .filter(
-              (project) =>
-                project.repository
-                  .toLowerCase()
-                  .includes(input?.toLowerCase() ?? '') ||
-                project.description
-                  .toLowerCase()
-                  .includes(input?.toLowerCase() ?? ''),
-            )
-            .map(
-              (project) =>
-                `${project.repository}${'\t'.repeat(
-                  project.tabOffset ?? 1,
-                )}${COLOR_GRAY} - ${
-                  project.description !== 'null'
-                    ? `${project.description.slice(0, 101)}${
-                        project.description.length > 101 ? '...' : ''
-                      }`
-                    : ``
-                }${COLOR_DEFAULT}`,
-            ),
-      },
-    ]);
-
-    sipgateProjectName = selectedProject
-      .slice(0, selectedProject.indexOf('\t'))
-      .trim();
-  } else {
-    logUsedConfig('EXAMPLE_REPO_NAME', sipgateProjectName);
+  if (projectName && isValidProjectName) {
+    logUsedConfig('EXAMPLE_REPO_NAME', projectName);
+    return projectName;
   }
 
-  return sipgateProjectName;
+  if (!isValidProjectName) {
+    console.warn(
+      `${COLOR_YELLOW}[WARN] Invalid EXAMPLE_REPO_NAME=${projectName} in config.${COLOR_DEFAULT}`,
+    );
+  }
+
+  const tabs = calculateTabs(
+    githubProjects.map((project) => project.repository),
+  );
+
+  githubProjects = githubProjects.map((project, index) => ({
+    ...project,
+    tabOffset: tabs[index],
+  }));
+
+  const { selectedProject } = await inquirer.prompt([
+    {
+      name: 'selectedProject',
+      message: 'Choose a sipgate.io example:',
+      type: 'autocomplete',
+      source: (answersSoFor: string[], input: string | undefined) =>
+        githubProjects
+          .filter(
+            (project) =>
+              project.repository
+                .toLowerCase()
+                .includes(input?.toLowerCase() ?? '') ||
+              project.description
+                .toLowerCase()
+                .includes(input?.toLowerCase() ?? ''),
+          )
+          .map(
+            (project) =>
+              `${project.repository}${'\t'.repeat(
+                project.tabOffset ?? 1,
+              )}${COLOR_GRAY} - ${
+                project.description !== 'null'
+                  ? `${project.description.slice(0, 101)}${
+                      project.description.length > 101 ? '...' : ''
+                    }`
+                  : ``
+              }${COLOR_DEFAULT}`,
+          ),
+    },
+  ]);
+
+  return selectedProject.slice(0, selectedProject.indexOf('\t')).trim();
 }
 
 export async function selectLocalProject() {
