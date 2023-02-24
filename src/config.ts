@@ -110,9 +110,10 @@ export async function selectGoogleCloudProject(config: Config) {
   const { stdout } = await execCommand(
     `gcloud projects list --format="value(projectId)"`,
   );
-  const projectName = config.GOOGLE_PROJECT_NAME;
+  const projectName = config.GOOGLE_PROJECT_NAME?.trim();
   const isValidProjectName =
-    stdout.includes(projectName ?? '') && !projectName?.includes('../');
+    stdout.includes(projectName ?? '') &&
+    !projectName?.match(/(^|\/)\.\.($|\/)/);
 
   const gcloudSetProject = async (name: string) => {
     await execCommand(`gcloud config set project ${name}`);
@@ -153,7 +154,7 @@ export async function selectGoogleCloudProject(config: Config) {
 export async function selectSipgateIOProject(config: Config) {
   let githubProjects = await getProjectList();
 
-  const projectName = config.EXAMPLE_REPO_NAME;
+  const projectName = config.EXAMPLE_REPO_NAME?.trim();
   const isValidProjectName =
     !projectName || githubProjects.find((x) => x.repository === projectName);
 
