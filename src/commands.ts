@@ -10,6 +10,7 @@ import { Config } from './types';
 
 // eslint-disable-next-line import/no-mutable-exports
 export let cmdConfig: Config = {};
+const defaultCfgFile = './config.cfg';
 
 async function run(options: { generateConfig: string; config: string }) {
   if (options.generateConfig) {
@@ -20,16 +21,20 @@ async function run(options: { generateConfig: string; config: string }) {
   ) {
     cmdConfig = loadConfig(options.config);
   } else if (options.config) {
-    const { confirm } = await inquirer.prompt([
-      {
-        name: 'confirm',
-        message:
-          'Could not find an existing config. Do you want to interactively generate a new one?',
-        type: 'confirm',
-      },
-    ]);
-    if (!confirm) process.exit(0);
-    cmdConfig = await interactivelyGenerateConfig();
+    if (configExists(defaultCfgFile)) {
+      cmdConfig = loadConfig(defaultCfgFile);
+    } else {
+      const { confirm } = await inquirer.prompt([
+        {
+          name: 'confirm',
+          message:
+            'Could not find an existing config. Do you want to interactively generate a new one?',
+          type: 'confirm',
+        },
+      ]);
+      if (!confirm) process.exit(0);
+      cmdConfig = await interactivelyGenerateConfig();
+    }
   }
 }
 
