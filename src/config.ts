@@ -56,7 +56,31 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
     envQuestions as QuestionCollection,
   );
 
-  writeFileSync(`./config.cfg`, buildEnv(envVarValues));
+  const { filename } = await inquirer.prompt([
+    {
+      name: 'filename',
+      message: 'Please choose a name for your file: ',
+      type: 'input',
+      default: 'config',
+    },
+  ]);
+
+  if (configExists(`./${filename}.cfg`)) {
+    const { confirmoverwrite } = await inquirer.prompt([
+      {
+        name: 'confirmoverwrite',
+        message: `${filename} already exists, are you sure you want to overwrite?`,
+        type: 'confirm',
+      },
+    ]);
+
+    if (confirmoverwrite) {
+      writeFileSync(`./${filename}.cfg`, buildEnv(envVarValues));
+    } else {
+      console.warn(`${COLOR_YELLOW}[WARN] Aborting...${COLOR_DEFAULT}`);
+      return interactivelyGenerateConfig();
+    }
+  }
 
   const { confirm } = await inquirer.prompt([
     {
@@ -69,6 +93,7 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
   if (!confirm) {
     return interactivelyGenerateConfig();
   }
+  writeFileSync(`./${filename}.cfg`, buildEnv(envVarValues));
 
   const resultConfig: Config = {};
   Object.entries(envVarValues).forEach(([key, value]) => {
