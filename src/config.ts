@@ -65,6 +65,18 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
     },
   ]);
 
+  const { confirm } = await inquirer.prompt([
+    {
+      name: 'confirm',
+      message: 'Are you sure everything is correct?',
+      type: 'confirm',
+    },
+  ]);
+
+  if (!confirm) {
+    return interactivelyGenerateConfig();
+  }
+
   if (configExists(`./${filename}.cfg`)) {
     const { confirmoverwrite } = await inquirer.prompt([
       {
@@ -81,14 +93,6 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
       return interactivelyGenerateConfig();
     }
   }
-
-  const { confirm } = await inquirer.prompt([
-    {
-      name: 'confirm',
-      message: 'Are you sure everything is correct?',
-      type: 'confirm',
-    },
-  ]);
 
   if (!confirm) {
     return interactivelyGenerateConfig();
