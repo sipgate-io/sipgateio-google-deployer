@@ -61,7 +61,7 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
       name: 'filename',
       message: 'Please choose a name for your file: ',
       type: 'input',
-      default: 'config',
+      default: 'config.cfg',
     },
   ]);
 
