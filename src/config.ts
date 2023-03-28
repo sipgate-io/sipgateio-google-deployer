@@ -56,7 +56,7 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
     envQuestions as QuestionCollection,
   );
 
-  const { filename } = await inquirer.prompt([
+  let { filename } = await inquirer.prompt([
     {
       name: 'filename',
       message: 'Please choose a name for your file: ',
@@ -64,6 +64,11 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
       default: 'config.cfg',
     },
   ]);
+
+  if (filename.endsWith('.cfg')) {
+    filename = filename.slice(0, -4);
+    console.log('filename');
+  }
 
   const { confirm } = await inquirer.prompt([
     {
