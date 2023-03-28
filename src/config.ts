@@ -48,14 +48,22 @@ export function loadConfig(configPath?: string): Config {
   return cfgObj;
 }
 
-export async function interactivelyGenerateConfig(): Promise<Config> {
+async function getEnvVarValues() {
   const envArray = readExampleConfig();
   const envQuestions = extractQuestions(envArray);
 
   const envVarValues = await inquirer.prompt(
     envQuestions as QuestionCollection,
   );
+  return envVarValues;
+}
 
+export async function interactivelyGenerateConfig(
+  retry?: boolean,
+  test?: inquirer.Answers,
+): Promise<Config> {
+  const envVarValues =
+    typeof test === 'undefined' ? await getEnvVarValues() : test;
   let { filename } = await inquirer.prompt([
     {
       name: 'filename',
@@ -79,7 +87,7 @@ export async function interactivelyGenerateConfig(): Promise<Config> {
   ]);
 
   if (!confirm) {
-    return interactivelyGenerateConfig();
+    return interactivelyGenerateConfig(true, envVarValues);
   }
 
   if (configExists(`./${filename}.cfg`)) {
