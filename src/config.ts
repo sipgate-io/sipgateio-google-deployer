@@ -6,6 +6,11 @@ import { COLOR_YELLOW, COLOR_DEFAULT, COLOR_GRAY } from './constants';
 import { getProjectList, readExampleConfig } from './fetch';
 import { Config } from './types';
 import { buildEnv, calculateTabs, extractQuestions } from './utils';
+import {
+  confirmationPrompt,
+  filenameInput,
+  overwriteConfirmation,
+} from './prompts';
 
 const execCommand = promisify(exec);
 
@@ -60,45 +65,17 @@ async function getEnvVarValues() {
 
 export async function interactivelyGenerateConfig(
   retry?: boolean,
-  test?: inquirer.Answers,
+  answers?: inquirer.Answers,
 ): Promise<Config> {
   const envVarValues =
-    typeof test === 'undefined' ? await getEnvVarValues() : test;
-  let { filename } = await inquirer.prompt([
-    {
-      name: 'filename',
-      message: 'Please choose a name for your file: ',
-      type: 'input',
-      default: 'config.cfg',
-    },
-  ]);
-
-  if (filename.endsWith('.cfg')) {
-    filename = filename.slice(0, -4);
-    console.log('filename');
-  }
-
-  const { confirm } = await inquirer.prompt([
-    {
-      name: 'confirm',
-      message: 'Are you sure everything is correct?',
-      type: 'confirm',
-    },
-  ]);
-
-  if (!confirm) {
+    typeof answers === 'undefined' ? await getEnvVarValues() : answers;
+  const filename = await filenameInput();
+  const confirmation = await confirmationPrompt();
+  if (!confirmation) {
     return interactivelyGenerateConfig(true, envVarValues);
   }
-
   if (configExists(`./${filename}.cfg`)) {
-    const { confirmoverwrite } = await inquirer.prompt([
-      {
-        name: 'confirmoverwrite',
-        message: `${filename} already exists, are you sure you want to overwrite?`,
-        type: 'confirm',
-      },
-    ]);
-
+    const confirmoverwrite = await overwriteConfirmation(filename);
     if (confirmoverwrite) {
       writeFileSync(`./${filename}.cfg`, buildEnv(envVarValues));
     } else {
@@ -107,7 +84,7 @@ export async function interactivelyGenerateConfig(
     }
   }
 
-  if (!confirm) {
+  if (!confirmation) {
     return interactivelyGenerateConfig();
   }
   writeFileSync(`./${filename}.cfg`, buildEnv(envVarValues));
@@ -194,7 +171,6 @@ export async function selectSipgateIOProject(config: Config) {
     ...project,
     tabOffset: tabs[index],
   }));
-
   const { selectedProject } = await inquirer.prompt([
     {
       name: 'selectedProject',
@@ -225,7 +201,6 @@ export async function selectSipgateIOProject(config: Config) {
           ),
     },
   ]);
-
   return selectedProject.slice(0, selectedProject.indexOf('\t')).trim();
 }
 

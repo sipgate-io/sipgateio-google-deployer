@@ -17,7 +17,7 @@ import { Config } from './types';
 import { fetchEnvFor, fetchLocalEnvFor } from './fetch';
 import { buildEnv, extractQuestions } from './utils';
 import { allRequirementsPresent, parseRequirements } from './requirements';
-import selectRepoLocation from './prompts';
+import { selectRepoLocation } from './prompts';
 import { cmdConfig, registerCommands } from './commands';
 
 const execCommand = promisify(execFile);
